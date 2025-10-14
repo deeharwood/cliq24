@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
-<script type="module">
+  
+  
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+
   const firebaseConfig = {
     apiKey: "AIzaSyBsL2FIznJagoUgIzzMCKEKWklCFCXxCFQ",
     authDomain: "cliq24-10bb7.firebaseapp.com",
@@ -13,8 +16,28 @@
     appId: "YOUR_APP_ID"
   };
 
-  firebase.initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  document.getElementById("googleSignIn").addEventListener("click", () => {
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        const user = result.user;
+        console.log("Signed in as:", user.displayName);
+        // You can redirect or update UI here
+      })
+      .catch((error) => {
+        console.error("Sign-in error:", error);
+      });
+  });
 </script>
+  
+  
+  
+  
+  
+ 
 
   <title>Cliq24 Dashboard</title>
   <link rel="stylesheet" href="style.css" />
@@ -32,25 +55,8 @@
     <div class="pod">Pod 3</div>
     <div class="pod">Pod 4</div>
   </main>
-<button id="loginBtn">Sign up with Google</button>
-<script>
-  const provider = new firebase.auth.GoogleAuthProvider();
-
-  document.getElementById("loginBtn").addEventListener("click", () => {
-    firebase.auth().signInWithPopup(provider)
-      .then((result) => {
-        const user = result.user;
-        console.log("User ID:", user.uid);
-        console.log("Name:", user.displayName);
-        console.log("Email:", user.email);
-
-        document.body.innerHTML += `<p>Welcome, ${user.displayName}!</p>`;
-      })
-      .catch((error) => {
-        console.error("Login error:", error);
-      });
-  });
-</script>
-
+  
+  <button id="googleSignIn">Sign up with Google</button>
+ 
 </body>
 </html>
