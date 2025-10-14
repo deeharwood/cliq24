@@ -8,6 +8,18 @@ body {
   align-items: center;
 }
 
+.logo {
+  width: 120px;
+  height: auto;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 10px #00ffff);
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
 header {
   text-align: center;
   padding: 2rem 1rem;
