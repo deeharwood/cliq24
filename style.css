@@ -70,3 +70,14 @@ header p {
   transform: translateY(-5px);
   box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
 }
+
+.login {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+.g_id_signin {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
