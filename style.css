@@ -10,7 +10,7 @@ body {
 
 .logo {
   width: 120px;
-  height: auto;
+  height: 120px;
   margin-bottom: 1rem;
   filter: drop-shadow(0 0 10px #00ffff);
   transition: transform 0.3s ease;
