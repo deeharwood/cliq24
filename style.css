@@ -10,15 +10,27 @@ body {
 
 .logo {
   width: 120px;
-  height: 120px;
+  height: auto;
   margin-bottom: 1rem;
   filter: drop-shadow(0 0 10px #00ffff);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
 .logo:hover {
   transform: scale(1.05);
+  filter: drop-shadow(0 0 15px #00ffff);
 }
+
+@keyframes glowPulse {
+  0% { filter: drop-shadow(0 0 10px #00ffff); }
+  50% { filter: drop-shadow(0 0 20px #00ffff); }
+  100% { filter: drop-shadow(0 0 10px #00ffff); }
+}
+
+.logo {
+  animation: glowPulse 3s infinite;
+}
+
 
 header {
   text-align: center;
