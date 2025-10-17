@@ -4,42 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBsL2FIznJagoUgIzzMCKEKWklCFCXxCFQ",
-    authDomain: "cliq24-10bb7.firebaseapp.com",
-    projectId: "cliq24-10bb7",
-    appId: "YOUR_APP_ID"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-
-  document.getElementById("googleSignIn").addEventListener("click", () => {
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        const user = result.user;
-        console.log("Signed in as:", user.displayName);
-        // You can redirect or update UI here
-      })
-      .catch((error) => {
-        console.error("Sign-in error:", error);
-      });
-  });
-</script>
-  
-  
-  
-  
-  
- 
-
-  <title>Cliq24 Dashboard</title>
+ <title>Cliq24 Dashboard</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -57,6 +22,24 @@
   </main>
   
   <button id="googleSignIn">Sign up with Google</button>
- 
+ <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDfn3MpPNAeH0J-SJJc2ng8LpGHyAUcFqQ",
+    authDomain: "cliq24protytpe.firebaseapp.com",
+    projectId: "cliq24protytpe",
+    storageBucket: "cliq24protytpe.firebasestorage.app",
+    messagingSenderId: "802334328757",
+    appId: "1:802334328757:web:462fe3265d5f2ca7fbfbfc"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
 </body>
 </html>
