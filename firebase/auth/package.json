@@ -25,6 +25,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "compile": "tsc -p tsconfig.build.json",
+    "watch": "tsc -p tsconfig.build.json --watch",
     "format": "prettier --write ."
   },
   "dependencies": {

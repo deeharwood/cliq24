@@ -3,7 +3,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } f
 
 const firebaseConfig = {
   apiKey: "AIzaSyBsL2FIznJagoUgIzzMCKEKWklCFCXxCFQ",
-  authDomain: "cliq24-10bb7.firebaseapp.com",
+  authDomain: "cliq24.app",
   projectId: "cliq24-10bb7",
   storageBucket: "cliq24.appspot.com",
   messagingSenderId: "YOUR_SENDER_ID",
