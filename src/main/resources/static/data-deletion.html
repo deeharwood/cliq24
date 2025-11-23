@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Deletion Instructions - Cliq24</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .deletion-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            color: var(--text-primary);
+        }
+
+        .deletion-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .deletion-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--ambient-pink), var(--ambient-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .deletion-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .deletion-content {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .deletion-content h2 {
+            color: var(--ambient-pink);
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .deletion-content h2:first-child {
+            margin-top: 0;
+        }
+
+        .deletion-content p, .deletion-content ol, .deletion-content ul {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .deletion-content ol, .deletion-content ul {
+            padding-left: 2rem;
+        }
+
+        .deletion-content li {
+            margin-bottom: 0.75rem;
+        }
+
+        .deletion-content strong {
+            color: var(--text-primary);
+        }
+
+        .warning-box {
+            background: rgba(255, 0, 110, 0.1);
+            border: 1px solid rgba(255, 0, 110, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .warning-box h3 {
+            color: var(--ambient-pink);
+            margin-bottom: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        .warning-box p {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .info-box h3 {
+            color: var(--ambient-blue);
+            margin-bottom: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        .contact-box {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(178, 75, 243, 0.1));
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .contact-box h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .contact-box a {
+            color: var(--ambient-blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .contact-box a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-purple));
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+
+        .back-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-purple));
+            border-radius: 50%;
+            color: white;
+            font-weight: 700;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+
+    <div class="deletion-container">
+        <div class="deletion-header">
+            <h1>Data Deletion Instructions</h1>
+            <p>How to delete your Cliq24 account and data</p>
+        </div>
+
+        <div class="deletion-content">
+            <h2>Overview</h2>
+            <p>
+                At Cliq24, we respect your right to privacy and data control. You can request deletion of
+                your account and all associated data at any time. This page explains how to delete your data
+                and what happens when you do.
+            </p>
+
+            <div class="warning-box">
+                <h3>⚠️ Important Notice</h3>
+                <p><strong>Data deletion is permanent and cannot be undone.</strong></p>
+                <p>Once you delete your account, all your data will be permanently removed from our servers within 30 days.</p>
+            </div>
+
+            <h2>Method 1: Delete Your Account Through the App</h2>
+            <p>Follow these steps to delete your account directly from Cliq24:</p>
+            <ol>
+                <li>Log in to your Cliq24 account at <a href="http://localhost:8080" style="color: var(--ambient-blue);">http://localhost:8080</a></li>
+                <li>Click on your profile picture in the top-right corner</li>
+                <li>Select <strong>"Account Settings"</strong> from the dropdown menu</li>
+                <li>Scroll to the bottom of the settings page</li>
+                <li>Click <strong>"Delete Account"</strong></li>
+                <li>Confirm your decision in the dialog that appears</li>
+                <li>Your account and all data will be scheduled for deletion</li>
+            </ol>
+
+            <h2>Method 2: Request Deletion via Email</h2>
+            <p>If you prefer, you can request account deletion by contacting us directly:</p>
+            <ol>
+                <li>Send an email to <a href="mailto:privacy@cliq24.app" style="color: var(--ambient-blue);">privacy@cliq24.app</a></li>
+                <li>Use the subject line: <strong>"Account Deletion Request"</strong></li>
+                <li>Include the following information in your email:
+                    <ul>
+                        <li>Your full name</li>
+                        <li>Email address associated with your Cliq24 account</li>
+                        <li>Confirmation that you want to permanently delete your account</li>
+                    </ul>
+                </li>
+                <li>We will process your request within 5 business days</li>
+                <li>You will receive a confirmation email once deletion is complete</li>
+            </ol>
+
+            <h2>What Data Will Be Deleted?</h2>
+            <p>When you delete your account, the following data will be permanently removed:</p>
+            <ul>
+                <li><strong>Account Information:</strong> Your name, email, and profile picture</li>
+                <li><strong>Authentication Data:</strong> Google OAuth credentials and JWT tokens</li>
+                <li><strong>Connected Accounts:</strong> All connected social media accounts and access tokens</li>
+                <li><strong>Uploaded Files:</strong> Any custom profile pictures you uploaded</li>
+                <li><strong>Activity Data:</strong> All metrics, syncs, and usage history</li>
+                <li><strong>Settings:</strong> All preferences and configurations</li>
+            </ul>
+
+            <div class="info-box">
+                <h3>ℹ️ Data Retention</h3>
+                <p>
+                    Your data will be completely removed from our servers within <strong>30 days</strong> of your deletion request.
+                    During this period, your account will be deactivated and inaccessible.
+                </p>
+                <p>
+                    Some data may be retained longer if required by law or for legitimate business purposes
+                    (e.g., financial records, abuse prevention).
+                </p>
+            </div>
+
+            <h2>What Happens to Third-Party Connections?</h2>
+            <p>
+                When you delete your Cliq24 account:
+            </p>
+            <ul>
+                <li>All connections to social media platforms (Facebook, Instagram, etc.) will be removed</li>
+                <li>Cliq24 will no longer have access to your social media accounts</li>
+                <li>You may need to manually revoke Cliq24's permissions in each platform's settings</li>
+                <li>No data will be deleted from your actual social media accounts</li>
+            </ul>
+
+            <h2>Revoking App Permissions</h2>
+            <p>To ensure Cliq24 no longer has access to your social media accounts, revoke permissions:</p>
+
+            <p><strong>For Google:</strong></p>
+            <ol>
+                <li>Go to <a href="https://myaccount.google.com/permissions" target="_blank" style="color: var(--ambient-blue);">https://myaccount.google.com/permissions</a></li>
+                <li>Find "Cliq24" in the list</li>
+                <li>Click "Remove Access"</li>
+            </ol>
+
+            <p><strong>For Facebook:</strong></p>
+            <ol>
+                <li>Go to <a href="https://www.facebook.com/settings?tab=applications" target="_blank" style="color: var(--ambient-blue);">Facebook Settings → Apps and Websites</a></li>
+                <li>Find "Cliq24" in the list</li>
+                <li>Click "Remove"</li>
+            </ol>
+
+            <h2>Can I Recover My Account After Deletion?</h2>
+            <p>
+                <strong>No.</strong> Account deletion is permanent and irreversible. Once your data is deleted,
+                it cannot be recovered. If you want to use Cliq24 again in the future, you will need to create
+                a new account from scratch.
+            </p>
+
+            <div class="contact-box">
+                <h3>Need Help?</h3>
+                <p>
+                    If you have questions about data deletion or need assistance, contact us at:<br>
+                    <a href="mailto:privacy@cliq24.app">privacy@cliq24.app</a>
+                </p>
+                <p style="margin-top: 1rem; color: var(--text-secondary);">
+                    We typically respond within 24-48 hours.
+                </p>
+            </div>
+
+            <h2>Your Rights Under GDPR/CCPA</h2>
+            <p>
+                Under data protection regulations (GDPR, CCPA), you have the right to:
+            </p>
+            <ul>
+                <li>Request a copy of your data (data portability)</li>
+                <li>Request correction of inaccurate data</li>
+                <li>Request deletion of your data (right to be forgotten)</li>
+                <li>Object to processing of your data</li>
+                <li>Withdraw consent at any time</li>
+            </ul>
+
+            <p>
+                To exercise any of these rights, contact us at <a href="mailto:privacy@cliq24.app" style="color: var(--ambient-blue);">privacy@cliq24.app</a>
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <a href="/" class="back-link">← Back to Cliq24</a>
+            <a href="/privacy.html" class="back-link" style="background: rgba(255, 255, 255, 0.1);">Privacy Policy</a>
+        </div>
+    </div>
+</body>
+</html>

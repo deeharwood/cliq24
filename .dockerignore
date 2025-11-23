@@ -1,0 +1,13 @@
+target/
+.mvn/
+.git/
+.gitignore
+.classpath
+.project
+.settings/
+*.md
+!DEPLOYMENT.md
+*.log
+.env
+*.iml
+.idea/

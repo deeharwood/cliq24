@@ -1,0 +1,27 @@
+Got it — you want to know how to instruct Claude so it can generate a Java web app with sign‑in/sign‑up functionality using Google OAuth.
+Here’s a clear, structured way to phrase your request so Claude understands exactly what you want and can produce working code:
+
+Example Prompt to Claude
+
+"Generate a Java web application using Spring Boot that includes both sign‑in and sign‑up functionality. Integrate Google OAuth 2.0 for authentication using Spring Security and the Google Identity Platform. The app should have:
+
+A /login page with a 'Sign in with Google' button.
+A /signup page for new users (if they don’t already exist in the database).
+User data stored in a relational database (e.g., MySQL or H2).
+Session management so authenticated users can access a protected /dashboard route.
+Clear instructions on how to configure the Google Cloud Console credentials (client ID, client secret, redirect URI).
+Maven pom.xml dependencies and application.properties setup included."
+
+
+
+Tips for Better Results with Claude
+
+Be explicit about the tech stack — e.g., Spring Boot, Jakarta EE, or plain Servlets.
+Specify the OAuth provider — in this case, Google Identity Platform.
+List the exact features — login page, signup page, database, session handling.
+Ask for configuration details — so you know where to put your Google credentials.
+Request runnable code — so Claude outputs a complete project structure.
+
+
+If you want, I can draft that exact Claude-ready prompt for you so you can paste it in and get a working Java OAuth app in one go.
+Do you want me to prepare that ready-to-use prompt for you?
