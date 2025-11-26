@@ -47,17 +47,26 @@ public class SocialAccountService {
     @Value("${spring.security.oauth2.client.registration.facebook.client-secret}")
     private String facebookAppSecret;
 
+    @Value("${facebook.redirect.uri}")
+    private String facebookRedirectUri;
+
     @Value("${spring.security.oauth2.client.registration.instagram.client-id}")
     private String instagramAppId;
 
     @Value("${spring.security.oauth2.client.registration.instagram.client-secret}")
     private String instagramAppSecret;
 
+    @Value("${instagram.redirect.uri}")
+    private String instagramRedirectUri;
+
     @Value("${spring.security.oauth2.client.registration.linkedin.client-id}")
     private String linkedInClientId;
 
     @Value("${spring.security.oauth2.client.registration.linkedin.client-secret}")
     private String linkedInClientSecret;
+
+    @Value("${linkedin.redirect.uri}")
+    private String linkedInRedirectUri;
 
     @Value("${spring.security.oauth2.client.registration.snapchat.client-id}")
     private String snapchatClientId;
@@ -67,6 +76,15 @@ public class SocialAccountService {
 
     @Value("${snapchat.redirect.uri}")
     private String snapchatRedirectUri;
+
+    @Value("${tiktok.client.key}")
+    private String tiktokClientKey;
+
+    @Value("${tiktok.client.secret}")
+    private String tiktokClientSecret;
+
+    @Value("${tiktok.redirect.uri}")
+    private String tiktokRedirectUri;
 
     @Autowired
     public SocialAccountService(SocialAccountRepository socialAccountRepository,
@@ -210,7 +228,7 @@ public class SocialAccountService {
                 facebookAppId,
                 facebookAppSecret,
                 code,
-                "http://localhost:8080/api/social-accounts/facebook/callback"
+                facebookRedirectUri
             );
 
             Map<String, Object> tokenResponse = restTemplate.getForObject(tokenUrl, Map.class);
@@ -287,7 +305,7 @@ public class SocialAccountService {
                 instagramAppId,
                 instagramAppSecret,
                 code,
-                "http://localhost:8080/api/social-accounts/instagram/callback"
+                instagramRedirectUri
             );
 
             Map<String, Object> tokenResponse = restTemplate.getForObject(tokenUrl, Map.class);
@@ -382,13 +400,13 @@ public class SocialAccountService {
             String formData = String.format(
                 "grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s&client_secret=%s",
                 URLEncoder.encode(code, StandardCharsets.UTF_8),
-                URLEncoder.encode("http://localhost:8080/api/social-accounts/linkedin/callback", StandardCharsets.UTF_8),
+                URLEncoder.encode(linkedInRedirectUri, StandardCharsets.UTF_8),
                 URLEncoder.encode(linkedInClientId, StandardCharsets.UTF_8),
                 URLEncoder.encode(linkedInClientSecret, StandardCharsets.UTF_8)
             );
 
             logger.debug("LinkedIn token request formData: grant_type=authorization_code&code=REDACTED&redirect_uri={}&client_id={}",
-                "http://localhost:8080/api/social-accounts/linkedin/callback", linkedInClientId);
+                linkedInRedirectUri, linkedInClientId);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -565,6 +583,143 @@ public class SocialAccountService {
         } catch (Exception e) {
             logger.error("Error connecting Snapchat account: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to connect Snapchat account: " + e.getMessage());
+        }
+    }
+
+    public SocialAccountDTO connectTikTokAccount(String authHeader, String code, String codeVerifier) {
+        logger.info("Connecting TikTok account with OAuth code and PKCE");
+
+        String userId = authService.validateAndExtractUserId(authHeader);
+
+        try {
+            // Exchange code for access token with PKCE code_verifier
+            String tokenUrl = "https://open.tiktokapis.com/v2/oauth/token/";
+
+            // TikTok requires form-encoded POST with PKCE
+            String formData = String.format(
+                "client_key=%s&client_secret=%s&code=%s&grant_type=authorization_code&redirect_uri=%s&code_verifier=%s",
+                URLEncoder.encode(tiktokClientKey, StandardCharsets.UTF_8),
+                URLEncoder.encode(tiktokClientSecret, StandardCharsets.UTF_8),
+                URLEncoder.encode(code, StandardCharsets.UTF_8),
+                URLEncoder.encode(tiktokRedirectUri, StandardCharsets.UTF_8),
+                URLEncoder.encode(codeVerifier != null ? codeVerifier : "", StandardCharsets.UTF_8)
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            HttpEntity<String> request = new HttpEntity<>(formData, headers);
+
+            Map<String, Object> tokenResponse = restTemplate.postForObject(
+                tokenUrl,
+                request,
+                Map.class
+            );
+
+            if (tokenResponse == null || !tokenResponse.containsKey("access_token")) {
+                logger.error("TikTok token response is null or missing access_token: {}", tokenResponse);
+                throw new RuntimeException("Failed to get access token from TikTok");
+            }
+
+            String accessToken = (String) tokenResponse.get("access_token");
+            String openId = (String) tokenResponse.get("open_id");
+            logger.info("Successfully obtained TikTok access token, open_id: {}", openId);
+            logger.debug("Full token response: {}", tokenResponse);
+
+            // Get user's TikTok profile using the scopes we requested
+            // user.info.profile fields: open_id, union_id, avatar_url, avatar_url_100, avatar_large_url, display_name, bio_description, profile_deep_link, is_verified, username
+            // user.info.stats fields: follower_count, following_count, likes_count, video_count
+            String profileUrl = "https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,avatar_url,username,follower_count,following_count,likes_count,video_count";
+
+            HttpHeaders profileHeaders = new HttpHeaders();
+            profileHeaders.setBearerAuth(accessToken);
+
+            HttpEntity<?> profileRequest = new HttpEntity<>(profileHeaders);
+
+            Map<String, Object> profileResponse = restTemplate.exchange(
+                profileUrl,
+                HttpMethod.GET,
+                profileRequest,
+                Map.class
+            ).getBody();
+
+            logger.info("TikTok profile response: {}", profileResponse);
+
+            // Extract user info from profile response
+            // TikTok API returns: { "data": { "user": { ... } }, "error": { ... } }
+            String displayName = "TikTok User";
+            String username = null;
+            String tiktokId = openId;
+            Integer followerCount = 0;
+            Integer videoCount = 0;
+
+            if (profileResponse != null && profileResponse.containsKey("data")) {
+                Map<String, Object> data = (Map<String, Object>) profileResponse.get("data");
+                if (data != null && data.containsKey("user")) {
+                    Map<String, Object> user = (Map<String, Object>) data.get("user");
+                    if (user != null) {
+                        displayName = user.get("display_name") != null ? (String) user.get("display_name") : displayName;
+                        username = user.get("username") != null ? (String) user.get("username") : null;
+                        tiktokId = user.get("open_id") != null ? (String) user.get("open_id") : openId;
+
+                        // Get stats if available
+                        if (user.get("follower_count") != null) {
+                            followerCount = ((Number) user.get("follower_count")).intValue();
+                        }
+                        if (user.get("video_count") != null) {
+                            videoCount = ((Number) user.get("video_count")).intValue();
+                        }
+                    }
+                }
+            }
+
+            // Use username if available, otherwise display_name
+            String accountName = username != null ? username : displayName;
+            logger.info("Retrieved TikTok profile for user: {} ({})", displayName, username);
+
+            // Create metrics with real data from TikTok
+            AccountMetrics metrics = new AccountMetrics();
+            metrics.setConnections(followerCount);  // followers
+            metrics.setPosts(videoCount);           // videos
+            metrics.setEngagementScore(85);         // default score
+            metrics.setPendingResponses(0);
+            metrics.setNewMessages(0);
+
+            // Check if account already connected
+            SocialAccount existingAccount = socialAccountRepository
+                .findByUserIdAndPlatform(userId, "tiktok")
+                .orElse(null);
+
+            if (existingAccount != null) {
+                existingAccount.setPlatformUserId(tiktokId);
+                existingAccount.setUsername(accountName);
+                existingAccount.setAccessToken(accessToken);
+                existingAccount.setConnectedAt(LocalDateTime.now());
+                existingAccount.setMetrics(metrics);
+                existingAccount.setLastSynced(LocalDateTime.now());
+
+                SocialAccount saved = socialAccountRepository.save(existingAccount);
+                logger.info("Updated existing TikTok account: {}", accountName);
+                return socialAccountMapper.toDTO(saved);
+            } else {
+                SocialAccount account = new SocialAccount();
+                account.setUserId(userId);
+                account.setPlatform("tiktok");
+                account.setPlatformUserId(tiktokId);
+                account.setUsername(accountName);
+                account.setAccessToken(accessToken);
+                account.setConnectedAt(LocalDateTime.now());
+                account.setMetrics(metrics);
+                account.setLastSynced(LocalDateTime.now());
+
+                SocialAccount savedAccount = socialAccountRepository.save(account);
+                logger.info("Successfully connected TikTok account: {} for user {}", accountName, userId);
+                return socialAccountMapper.toDTO(savedAccount);
+            }
+
+        } catch (Exception e) {
+            logger.error("Error connecting TikTok account: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to connect TikTok account: " + e.getMessage());
         }
     }
 }

@@ -30,17 +30,26 @@ public class SocialAccountController {
     @Value("${spring.security.oauth2.client.registration.facebook.scope}")
     private String facebookScope;
 
+    @Value("${facebook.redirect.uri}")
+    private String facebookRedirectUri;
+
     @Value("${spring.security.oauth2.client.registration.instagram.client-id}")
     private String instagramAppId;
 
     @Value("${spring.security.oauth2.client.registration.instagram.scope}")
     private String instagramScope;
 
+    @Value("${instagram.redirect.uri}")
+    private String instagramRedirectUri;
+
     @Value("${spring.security.oauth2.client.registration.linkedin.client-id}")
     private String linkedInClientId;
 
     @Value("${spring.security.oauth2.client.registration.linkedin.scope}")
     private String linkedInScope;
+
+    @Value("${linkedin.redirect.uri}")
+    private String linkedInRedirectUri;
 
     @Value("${spring.security.oauth2.client.registration.snapchat.client-id}")
     private String snapchatClientId;
@@ -50,6 +59,15 @@ public class SocialAccountController {
 
     @Value("${snapchat.redirect.uri}")
     private String snapchatRedirectUri;
+
+    @Value("${tiktok.client.key}")
+    private String tiktokClientKey;
+
+    @Value("${tiktok.client.secret}")
+    private String tiktokClientSecret;
+
+    @Value("${tiktok.redirect.uri}")
+    private String tiktokRedirectUri;
 
     // Store PKCE code verifiers temporarily (in production, use Redis or session)
     private static final ConcurrentHashMap<String, String> pkceVerifiers = new ConcurrentHashMap<>();
@@ -104,13 +122,12 @@ public class SocialAccountController {
         }
 
         // Store token in session or pass as state parameter
-        String redirectUri = "http://localhost:8080/api/social-accounts/facebook/callback";
         String state = token; // Pass JWT as state (already without Bearer prefix from frontend)
 
         String authUrl = String.format(
             "https://www.facebook.com/v18.0/dialog/oauth?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
             facebookAppId,
-            URLEncoder.encode(redirectUri, StandardCharsets.UTF_8),
+            URLEncoder.encode(facebookRedirectUri, StandardCharsets.UTF_8),
             URLEncoder.encode(facebookScope, StandardCharsets.UTF_8),
             URLEncoder.encode(state, StandardCharsets.UTF_8)
         );
@@ -156,13 +173,12 @@ public class SocialAccountController {
         }
 
         // Store token in session or pass as state parameter
-        String redirectUri = "http://localhost:8080/api/social-accounts/instagram/callback";
         String state = token; // Pass JWT as state (already without Bearer prefix from frontend)
 
         String authUrl = String.format(
             "https://www.facebook.com/v18.0/dialog/oauth?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
             instagramAppId,
-            URLEncoder.encode(redirectUri, StandardCharsets.UTF_8),
+            URLEncoder.encode(instagramRedirectUri, StandardCharsets.UTF_8),
             URLEncoder.encode(instagramScope, StandardCharsets.UTF_8),
             URLEncoder.encode(state, StandardCharsets.UTF_8)
         );
@@ -207,13 +223,12 @@ public class SocialAccountController {
             return;
         }
 
-        String redirectUri = "http://localhost:8080/api/social-accounts/linkedin/callback";
         String state = token;
 
         String authUrl = String.format(
             "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&state=%s",
             linkedInClientId,
-            URLEncoder.encode(redirectUri, StandardCharsets.UTF_8),
+            URLEncoder.encode(linkedInRedirectUri, StandardCharsets.UTF_8),
             URLEncoder.encode(linkedInScope, StandardCharsets.UTF_8),
             URLEncoder.encode(state, StandardCharsets.UTF_8)
         );
@@ -292,6 +307,70 @@ public class SocialAccountController {
             response.sendRedirect("/?snapchat_connected=true");
         } catch (Exception e) {
             response.sendRedirect("/?snapchat_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+        }
+    }
+
+    /**
+     * Initiate TikTok OAuth connection with PKCE
+     */
+    @GetMapping("/TikTok")
+    public void initiateTikTokConnection(
+            @RequestParam(required = false) String token,
+            HttpServletResponse response) throws IOException {
+
+        if (token == null || token.isEmpty()) {
+            response.sendRedirect("/?error=missing_token");
+            return;
+        }
+
+        String state = token;
+
+        // Generate PKCE code verifier and challenge (TikTok requires PKCE)
+        String codeVerifier = generateCodeVerifier();
+        String codeChallenge = generateCodeChallenge(codeVerifier);
+
+        // Store code verifier for later use in token exchange
+        pkceVerifiers.put(state, codeVerifier);
+
+        // TikTok OAuth2 authorization URL
+        // Scopes: user.info.profile for profile data, user.info.stats for follower/video counts
+        String scope = "user.info.profile,user.info.stats";
+        String authUrl = String.format(
+            "https://www.tiktok.com/v2/auth/authorize/?client_key=%s&redirect_uri=%s&scope=%s&response_type=code&state=%s&code_challenge=%s&code_challenge_method=S256",
+            tiktokClientKey,
+            URLEncoder.encode(tiktokRedirectUri, StandardCharsets.UTF_8),
+            URLEncoder.encode(scope, StandardCharsets.UTF_8),
+            URLEncoder.encode(state, StandardCharsets.UTF_8),
+            URLEncoder.encode(codeChallenge, StandardCharsets.UTF_8)
+        );
+
+        response.sendRedirect(authUrl);
+    }
+
+    /**
+     * TikTok OAuth callback with PKCE
+     */
+    @GetMapping("/tiktok/callback")
+    public void tiktokCallback(
+            @RequestParam String code,
+            @RequestParam String state,
+            @RequestParam(required = false) String error,
+            @RequestParam(required = false) String error_description,
+            HttpServletResponse response) throws IOException {
+
+        if (error != null) {
+            response.sendRedirect("/?tiktok_error=" + URLEncoder.encode(error_description != null ? error_description : error, StandardCharsets.UTF_8));
+            return;
+        }
+
+        try {
+            String token = "Bearer " + state;
+            // Retrieve the code verifier for PKCE
+            String codeVerifier = pkceVerifiers.remove(state);
+            SocialAccountDTO account = socialAccountService.connectTikTokAccount(token, code, codeVerifier);
+            response.sendRedirect("/?tiktok_connected=true");
+        } catch (Exception e) {
+            response.sendRedirect("/?tiktok_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
         }
     }
 

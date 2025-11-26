@@ -157,18 +157,18 @@ class Cliq24Dashboard {
                 return;
             }
 
-            // Snapchat uses real OAuth flow - redirect to authorization
-            if (platform === 'Snapchat') {
-                this.showInfo('Redirecting to Snapchat...');
+            // TikTok uses real OAuth flow - redirect to authorization
+            if (platform === 'TikTok') {
+                this.showInfo('Redirecting to TikTok...');
                 this.closeModal();
 
                 // Pass JWT token as query parameter (remove Bearer prefix)
                 const token = this.jwtToken.replace('Bearer ', '');
-                window.location.href = `${this.apiBaseUrl}/api/social-accounts/Snapchat?token=${encodeURIComponent(token)}`;
+                window.location.href = `${this.apiBaseUrl}/api/social-accounts/TikTok?token=${encodeURIComponent(token)}`;
                 return;
             }
 
-            // Other platforms use demo mode for now
+            // Other platforms use demo mode for now (including Snapchat until OAuth is fixed)
             this.showInfo(`Connecting to ${platform}...`);
 
             const response = await this.apiCall(`/api/social-accounts/${platform}`);
@@ -1136,6 +1136,29 @@ if (snapchatError) {
     setTimeout(() => {
         if (window.cliq24App) {
             window.cliq24App.showError('Snapchat connection failed: ' + decodeURIComponent(snapchatError));
+        }
+    }, 1000);
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+// Handle TikTok connection callback
+const tiktokConnected = urlParams.get('tiktok_connected');
+const tiktokError = urlParams.get('tiktok_error');
+
+if (tiktokConnected === 'true') {
+    setTimeout(() => {
+        if (window.cliq24App) {
+            window.cliq24App.showSuccess('TikTok connected successfully!');
+            window.cliq24App.loadSocialAccounts();
+        }
+    }, 1000);
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+if (tiktokError) {
+    setTimeout(() => {
+        if (window.cliq24App) {
+            window.cliq24App.showError('TikTok connection failed: ' + decodeURIComponent(tiktokError));
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);

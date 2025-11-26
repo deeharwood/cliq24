@@ -25,9 +25,13 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index.html", "/app.js", "/style.css", "/logo.PNG",
-                                "/privacy.html", "/terms.html",
+                                "/privacy.html", "/terms.html", "/data-deletion.html",
                                 "/auth/google", "/oauth2/**", "/login/**", "/error",
-                                "/api/social-accounts/facebook/callback",
+                                "/api/social-accounts/Facebook", "/api/social-accounts/facebook/callback",
+                                "/api/social-accounts/Instagram", "/api/social-accounts/instagram/callback",
+                                "/api/social-accounts/LinkedIn", "/api/social-accounts/linkedin/callback",
+                                "/api/social-accounts/TikTok", "/api/social-accounts/tiktok/callback",
+                                "/api/social-accounts/Snapchat", "/api/social-accounts/snapchat/callback",
                                 "/uploads/**", "/*.png", "/*.jpg", "/*.css", "/*.js", "/*.html").permitAll()
                 .anyRequest().authenticated()
             )
