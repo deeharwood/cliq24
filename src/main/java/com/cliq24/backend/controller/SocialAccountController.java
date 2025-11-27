@@ -69,6 +69,24 @@ public class SocialAccountController {
     @Value("${tiktok.redirect.uri}")
     private String tiktokRedirectUri;
 
+    @Value("${spring.security.oauth2.client.registration.twitter.client-id}")
+    private String twitterClientId;
+
+    @Value("${spring.security.oauth2.client.registration.twitter.scope}")
+    private String twitterScope;
+
+    @Value("${twitter.redirect.uri}")
+    private String twitterRedirectUri;
+
+    @Value("${spring.security.oauth2.client.registration.youtube.client-id}")
+    private String youtubeClientId;
+
+    @Value("${spring.security.oauth2.client.registration.youtube.scope}")
+    private String youtubeScope;
+
+    @Value("${youtube.redirect.uri}")
+    private String youtubeRedirectUri;
+
     // Store PKCE code verifiers temporarily (in production, use Redis or session)
     private static final ConcurrentHashMap<String, String> pkceVerifiers = new ConcurrentHashMap<>();
 
@@ -409,5 +427,126 @@ public class SocialAccountController {
             @RequestHeader("Authorization") String token) {
         SocialAccountDTO account = socialAccountService.syncMetrics(accountId, token);
         return ResponseEntity.ok(account);
+    }
+
+    /**
+     * Initiate Twitter/X OAuth connection with PKCE
+     */
+    @GetMapping("/Twitter")
+    public void initiateTwitterConnection(
+            @RequestParam(required = false) String token,
+            HttpServletResponse response) throws IOException {
+
+        if (token == null || token.isEmpty()) {
+            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?error=missing_token");
+            return;
+        }
+
+        // Generate PKCE parameters
+        String codeVerifier = generateCodeVerifier();
+        String codeChallenge = generateCodeChallenge(codeVerifier);
+        String state = token; // Use JWT token as state
+
+        // Store code verifier for callback
+        pkceVerifiers.put(state, codeVerifier);
+
+        // Twitter expects space-separated scopes, convert from comma-separated
+        String spaceSeparatedScopes = twitterScope.replace(",", " ");
+
+        String authUrl = String.format(
+            "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&state=%s&code_challenge=%s&code_challenge_method=S256",
+            URLEncoder.encode(twitterClientId, StandardCharsets.UTF_8),
+            URLEncoder.encode(twitterRedirectUri, StandardCharsets.UTF_8),
+            URLEncoder.encode(spaceSeparatedScopes, StandardCharsets.UTF_8),
+            URLEncoder.encode(state, StandardCharsets.UTF_8),
+            URLEncoder.encode(codeChallenge, StandardCharsets.UTF_8)
+        );
+
+        response.sendRedirect(authUrl);
+    }
+
+    /**
+     * Twitter/X OAuth callback
+     */
+    @GetMapping("/twitter/callback")
+    public void twitterCallback(
+            @RequestParam String code,
+            @RequestParam String state,
+            HttpServletResponse response) throws IOException {
+
+        try {
+            // State contains the JWT token
+            String token = "Bearer " + state;
+
+            // Get code verifier from storage
+            String codeVerifier = getCodeVerifier(state);
+            if (codeVerifier == null) {
+                response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?twitter_error=invalid_state");
+                return;
+            }
+
+            // Exchange code for access token and create account
+            SocialAccountDTO account = socialAccountService.connectTwitterAccount(token, code, codeVerifier);
+
+            // Redirect back to frontend with success
+            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?twitter_connected=true");
+        } catch (Exception e) {
+            // Redirect back with error
+            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?twitter_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+        }
+    }
+
+    /**
+     * Initiate YouTube OAuth connection (uses Google OAuth with YouTube scopes)
+     */
+    @GetMapping("/YouTube")
+    public void initiateYouTubeConnection(
+            @RequestParam(required = false) String token,
+            HttpServletResponse response) throws IOException {
+
+        if (token == null || token.isEmpty()) {
+            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?error=missing_token");
+            return;
+        }
+
+        // Use token as state parameter
+        String state = token;
+
+        // Google expects space-separated scopes, convert from comma-separated
+        String spaceSeparatedScopes = youtubeScope.replace(",", " ");
+
+        String authUrl = String.format(
+            "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&state=%s&access_type=offline&prompt=consent",
+            URLEncoder.encode(youtubeClientId, StandardCharsets.UTF_8),
+            URLEncoder.encode(youtubeRedirectUri, StandardCharsets.UTF_8),
+            URLEncoder.encode(spaceSeparatedScopes, StandardCharsets.UTF_8),
+            URLEncoder.encode(state, StandardCharsets.UTF_8)
+        );
+
+        response.sendRedirect(authUrl);
+    }
+
+    /**
+     * YouTube OAuth callback
+     */
+    @GetMapping("/youtube/callback")
+    public void youtubeCallback(
+            @RequestParam String code,
+            @RequestParam String state,
+            HttpServletResponse response) throws IOException {
+
+        try {
+            // State contains the JWT token
+            String token = "Bearer " + state;
+
+            // Exchange code for access token and create account
+            SocialAccountDTO account = socialAccountService.connectYouTubeAccount(token, code);
+
+            // Redirect back to frontend with success
+            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?youtube_connected=true");
+        } catch (Exception e) {
+            // Redirect back with error
+            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?youtube_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+        }
     }
 }

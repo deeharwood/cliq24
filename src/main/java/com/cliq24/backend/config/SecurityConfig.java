@@ -31,7 +31,10 @@ public class SecurityConfig {
                                 "/api/social-accounts/Instagram", "/api/social-accounts/instagram/callback",
                                 "/api/social-accounts/LinkedIn", "/api/social-accounts/linkedin/callback",
                                 "/api/social-accounts/TikTok", "/api/social-accounts/tiktok/callback",
+                                "/api/social-accounts/Twitter", "/api/social-accounts/twitter/callback",
+                                "/api/social-accounts/YouTube", "/api/social-accounts/youtube/callback",
                                 "/api/social-accounts/Snapchat", "/api/social-accounts/snapchat/callback",
+                                "/api/subscription/webhook",
                                 "/uploads/**", "/*.png", "/*.jpg", "/*.css", "/*.js", "/*.html").permitAll()
                 .anyRequest().authenticated()
             )

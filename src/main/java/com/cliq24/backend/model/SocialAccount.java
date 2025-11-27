@@ -13,6 +13,7 @@ public class SocialAccount {
     private String platform;
     private String platformUserId;
     private String username;
+    private String accountName; // Display name (e.g., "John Doe" vs username "@johndoe")
     private String accessToken; // Will be encrypted
     private String refreshToken; // Will be encrypted
     private LocalDateTime tokenExpiresAt;
@@ -62,6 +63,14 @@ public class SocialAccount {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     public String getAccessToken() {

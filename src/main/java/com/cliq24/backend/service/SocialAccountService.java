@@ -39,6 +39,8 @@ public class SocialAccountService {
     private final TikTokService tikTokService;
     private final YouTubeService youTubeService;
     private final SnapchatService snapchatService;
+    private final SubscriptionService subscriptionService;
+    private final com.cliq24.backend.repository.UserRepository userRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${spring.security.oauth2.client.registration.facebook.client-id}")
@@ -96,7 +98,9 @@ public class SocialAccountService {
                                LinkedInService linkedInService,
                                TikTokService tikTokService,
                                YouTubeService youTubeService,
-                               SnapchatService snapchatService) {
+                               SnapchatService snapchatService,
+                               SubscriptionService subscriptionService,
+                               com.cliq24.backend.repository.UserRepository userRepository) {
         this.socialAccountRepository = socialAccountRepository;
         this.socialAccountMapper = socialAccountMapper;
         this.authService = authService;
@@ -107,8 +111,36 @@ public class SocialAccountService {
         this.tikTokService = tikTokService;
         this.youTubeService = youTubeService;
         this.snapchatService = snapchatService;
+        this.subscriptionService = subscriptionService;
+        this.userRepository = userRepository;
     }
-    
+
+    /**
+     * Check if user can add a new social account based on subscription tier
+     */
+    private void checkAccountLimit(String userId, String platform) {
+        // Check if user is updating an existing account
+        boolean isUpdate = socialAccountRepository.findByUserIdAndPlatform(userId, platform.toLowerCase()).isPresent();
+        if (isUpdate) {
+            return; // Allow updates to existing accounts
+        }
+
+        // Count current accounts
+        long currentAccountCount = socialAccountRepository.countByUserId(userId);
+
+        // Get user and check limit
+        com.cliq24.backend.model.User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!subscriptionService.canAddAccount(user, (int) currentAccountCount)) {
+            int limit = subscriptionService.getAccountLimit(user);
+            throw new RuntimeException(
+                "Account limit reached. Free users can connect up to " + limit +
+                " accounts. Upgrade to Premium for unlimited accounts."
+            );
+        }
+    }
+
     public List<SocialAccountDTO> getUserAccounts(String authHeader) {
         logger.info("Fetching social accounts for user");
         
@@ -483,6 +515,141 @@ public class SocialAccountService {
         } catch (Exception e) {
             logger.error("Error connecting LinkedIn account: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to connect LinkedIn account: " + e.getMessage());
+        }
+    }
+
+    public SocialAccountDTO connectTwitterAccount(String authHeader, String code, String codeVerifier) {
+        logger.info("Connecting Twitter account with OAuth code and PKCE");
+
+        String userId = authService.validateAndExtractUserId(authHeader);
+
+        // Check account limit before connecting
+        checkAccountLimit(userId, "twitter");
+
+        try {
+            // Exchange code for access token with PKCE
+            Map<String, Object> tokenResponse = twitterService.exchangeCodeForToken(code, codeVerifier);
+            String accessToken = (String) tokenResponse.get("access_token");
+
+            logger.info("Successfully obtained Twitter access token");
+
+            // Get user's Twitter profile
+            Map<String, Object> profileResponse = twitterService.getUserProfile(accessToken);
+            Map<String, Object> profile = (Map<String, Object>) profileResponse.get("data");
+
+            String twitterId = (String) profile.get("id");
+            String username = (String) profile.get("username");
+            String name = (String) profile.get("name");
+
+            logger.info("Retrieved Twitter profile for user: {}", username);
+
+            // Check if account already connected
+            SocialAccount existingAccount = socialAccountRepository
+                .findByUserIdAndPlatform(userId, "twitter")
+                .orElse(null);
+
+            if (existingAccount != null) {
+                existingAccount.setPlatformUserId(twitterId);
+                existingAccount.setUsername(username);
+                existingAccount.setAccountName(name);
+                existingAccount.setAccessToken(accessToken);
+                existingAccount.setConnectedAt(LocalDateTime.now());
+                existingAccount.setMetrics(twitterService.syncMetrics(existingAccount));
+                existingAccount.setLastSynced(LocalDateTime.now());
+
+                SocialAccount saved = socialAccountRepository.save(existingAccount);
+                logger.info("Updated existing Twitter account");
+                return socialAccountMapper.toDTO(saved);
+            } else {
+                SocialAccount account = new SocialAccount();
+                account.setUserId(userId);
+                account.setPlatform("twitter");
+                account.setPlatformUserId(twitterId);
+                account.setUsername(username);
+                account.setAccountName(name);
+                account.setAccessToken(accessToken);
+                account.setConnectedAt(LocalDateTime.now());
+                account.setMetrics(twitterService.syncMetrics(account));
+                account.setLastSynced(LocalDateTime.now());
+
+                SocialAccount savedAccount = socialAccountRepository.save(account);
+                logger.info("Successfully connected Twitter account for user {}", userId);
+                return socialAccountMapper.toDTO(savedAccount);
+            }
+
+        } catch (Exception e) {
+            logger.error("Error connecting Twitter account: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to connect Twitter account: " + e.getMessage());
+        }
+    }
+
+    public SocialAccountDTO connectYouTubeAccount(String authHeader, String code) {
+        logger.info("Connecting YouTube account with OAuth code");
+
+        String userId = authService.validateAndExtractUserId(authHeader);
+
+        // Check account limit before connecting
+        checkAccountLimit(userId, "youtube");
+
+        try {
+            // Exchange code for access token using YouTubeService
+            Map<String, Object> tokenResponse = youTubeService.exchangeCodeForToken(code);
+            String accessToken = (String) tokenResponse.get("access_token");
+
+            logger.info("Successfully obtained YouTube/Google access token");
+
+            // Get YouTube channel info
+            Map<String, Object> channelData = youTubeService.getChannelInfo(accessToken);
+            List<Map<String, Object>> items = (List<Map<String, Object>>) channelData.get("items");
+
+            if (items == null || items.isEmpty()) {
+                throw new RuntimeException("No YouTube channel found for this Google account");
+            }
+
+            Map<String, Object> channel = items.get(0);
+            Map<String, Object> snippet = (Map<String, Object>) channel.get("snippet");
+            String channelId = (String) channel.get("id");
+            String channelTitle = (String) snippet.get("title");
+
+            logger.info("Retrieved YouTube channel: {}", channelTitle);
+
+            // Check if account already connected
+            SocialAccount existingAccount = socialAccountRepository
+                .findByUserIdAndPlatform(userId, "youtube")
+                .orElse(null);
+
+            if (existingAccount != null) {
+                existingAccount.setPlatformUserId(channelId);
+                existingAccount.setUsername(channelTitle);
+                existingAccount.setAccountName(channelTitle);
+                existingAccount.setAccessToken(accessToken);
+                existingAccount.setConnectedAt(LocalDateTime.now());
+                existingAccount.setMetrics(youTubeService.syncMetrics(existingAccount));
+                existingAccount.setLastSynced(LocalDateTime.now());
+
+                SocialAccount saved = socialAccountRepository.save(existingAccount);
+                logger.info("Updated existing YouTube account");
+                return socialAccountMapper.toDTO(saved);
+            } else {
+                SocialAccount account = new SocialAccount();
+                account.setUserId(userId);
+                account.setPlatform("youtube");
+                account.setPlatformUserId(channelId);
+                account.setUsername(channelTitle);
+                account.setAccountName(channelTitle);
+                account.setAccessToken(accessToken);
+                account.setConnectedAt(LocalDateTime.now());
+                account.setMetrics(youTubeService.syncMetrics(account));
+                account.setLastSynced(LocalDateTime.now());
+
+                SocialAccount savedAccount = socialAccountRepository.save(account);
+                logger.info("Successfully connected YouTube account for user {}", userId);
+                return socialAccountMapper.toDTO(savedAccount);
+            }
+
+        } catch (Exception e) {
+            logger.error("Error connecting YouTube account: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to connect YouTube account: " + e.getMessage());
         }
     }
 

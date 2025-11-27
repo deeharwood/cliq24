@@ -6,6 +6,7 @@ class Cliq24Dashboard {
         this.jwtToken = this.getJWTFromStorage();
         this.socialAccounts = [];
         this.currentUser = null;
+        this.subscriptionStatus = null;
         this.allPlatforms = ['Facebook', 'Instagram', 'Twitter', 'LinkedIn', 'TikTok', 'YouTube', 'Snapchat'];
         this.confirmCallback = null;
         this.init();
@@ -99,6 +100,19 @@ class Cliq24Dashboard {
         if (user) {
             this.currentUser = user;
             this.updateUserUI(user);
+            await this.loadSubscriptionStatus();
+        }
+    }
+
+    async loadSubscriptionStatus() {
+        try {
+            const status = await this.apiCall('/api/subscription/status');
+            if (status) {
+                this.subscriptionStatus = status;
+                this.updateSubscriptionUI();
+            }
+        } catch (error) {
+            console.error('Failed to load subscription status:', error);
         }
     }
 
@@ -157,6 +171,17 @@ class Cliq24Dashboard {
                 return;
             }
 
+            // Twitter uses real OAuth flow - redirect to authorization
+            if (platform === 'Twitter') {
+                this.showInfo('Redirecting to Twitter...');
+                this.closeModal();
+
+                // Pass JWT token as query parameter (remove Bearer prefix)
+                const token = this.jwtToken.replace('Bearer ', '');
+                window.location.href = `${this.apiBaseUrl}/api/social-accounts/Twitter?token=${encodeURIComponent(token)}`;
+                return;
+            }
+
             // TikTok uses real OAuth flow - redirect to authorization
             if (platform === 'TikTok') {
                 this.showInfo('Redirecting to TikTok...');
@@ -165,6 +190,17 @@ class Cliq24Dashboard {
                 // Pass JWT token as query parameter (remove Bearer prefix)
                 const token = this.jwtToken.replace('Bearer ', '');
                 window.location.href = `${this.apiBaseUrl}/api/social-accounts/TikTok?token=${encodeURIComponent(token)}`;
+                return;
+            }
+
+            // YouTube uses real OAuth flow - redirect to authorization
+            if (platform === 'YouTube') {
+                this.showInfo('Redirecting to YouTube...');
+                this.closeModal();
+
+                // Pass JWT token as query parameter (remove Bearer prefix)
+                const token = this.jwtToken.replace('Bearer ', '');
+                window.location.href = `${this.apiBaseUrl}/api/social-accounts/YouTube?token=${encodeURIComponent(token)}`;
                 return;
             }
 
@@ -266,6 +302,77 @@ class Cliq24Dashboard {
                 userAvatar.addEventListener('click', () => this.showProfilePictureDialog());
                 userAvatar.dataset.listenerAdded = 'true';
             }
+        }
+    }
+
+    updateSubscriptionUI() {
+        if (!this.subscriptionStatus) return;
+
+        // Add or update subscription badge in header
+        const userInfo = document.querySelector('.user-info');
+        if (userInfo) {
+            // Remove existing badge if any
+            const existingBadge = userInfo.querySelector('.subscription-badge');
+            if (existingBadge) existingBadge.remove();
+
+            // Add tier badge
+            const badge = document.createElement('span');
+            badge.className = 'subscription-badge';
+            badge.textContent = this.subscriptionStatus.tier;
+            badge.style.cssText = `
+                display: inline-block;
+                padding: 2px 8px;
+                margin-left: 8px;
+                border-radius: 12px;
+                font-size: 11px;
+                font-weight: 600;
+                ${this.subscriptionStatus.tier === 'PREMIUM' ?
+                    'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;' :
+                    'background: #e2e8f0; color: #64748b;'}
+            `;
+            const userName = document.getElementById('userName');
+            if (userName) {
+                userName.after(badge);
+            }
+        }
+
+        // Add upgrade button if free tier
+        if (this.subscriptionStatus.tier === 'FREE') {
+            const header = document.querySelector('.header-content');
+            if (header && !document.getElementById('upgradeBtn')) {
+                const upgradeBtn = document.createElement('button');
+                upgradeBtn.id = 'upgradeBtn';
+                upgradeBtn.className = 'upgrade-btn';
+                upgradeBtn.innerHTML = '⭐ Upgrade to Premium';
+                upgradeBtn.style.cssText = `
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                    margin-left: auto;
+                `;
+                upgradeBtn.onmouseover = () => upgradeBtn.style.transform = 'scale(1.05)';
+                upgradeBtn.onmouseout = () => upgradeBtn.style.transform = 'scale(1)';
+                upgradeBtn.onclick = () => this.handleUpgrade();
+                header.appendChild(upgradeBtn);
+            }
+        }
+    }
+
+    async handleUpgrade() {
+        try {
+            const response = await this.apiCall('/api/subscription/create-checkout-session', { method: 'POST' });
+            if (response && response.url) {
+                // Redirect to Stripe checkout
+                window.location.href = response.url;
+            }
+        } catch (error) {
+            console.error('Failed to create checkout session:', error);
+            this.showError('Failed to start upgrade process. Please try again.');
         }
     }
 
@@ -890,6 +997,69 @@ class Cliq24Dashboard {
         this.showNotification(message, 'info');
     }
 
+    showAccountLimitError() {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px; text-align: center;">
+                <h2 style="margin-bottom: 16px;">🔒 Account Limit Reached</h2>
+                <p style="color: #64748b; margin-bottom: 24px;">
+                    You've reached the limit of 2 social media accounts on the Free plan.
+                    <br><br>
+                    <strong>Upgrade to Premium to connect unlimited accounts!</strong>
+                </p>
+                <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
+                        ${this.subscriptionStatus?.tier === 'FREE' ? 'Unlock Premium' : 'Premium Plan'}
+                    </div>
+                    <div style="color: #64748b;">Unlimited social accounts</div>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button id="upgradeNowBtn" style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 32px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        flex: 1;
+                        max-width: 200px;
+                    ">⭐ Upgrade Now</button>
+                    <button id="closeLimitModal" style="
+                        background: #e2e8f0;
+                        color: #64748b;
+                        border: none;
+                        padding: 12px 32px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        flex: 1;
+                        max-width: 200px;
+                    ">Maybe Later</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('upgradeNowBtn').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            this.handleUpgrade();
+        });
+
+        document.getElementById('closeLimitModal').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
     showNotification(message, type = 'info') {
         console.log(`[${type.toUpperCase()}] ${message}`);
 
@@ -1066,7 +1236,12 @@ if (facebookConnected === 'true') {
 if (facebookError) {
     setTimeout(() => {
         if (window.cliq24App) {
-            window.cliq24App.showError('Facebook connection failed: ' + decodeURIComponent(facebookError));
+            const errorMsg = decodeURIComponent(facebookError);
+            if (errorMsg.includes('Account limit reached')) {
+                window.cliq24App.showAccountLimitError();
+            } else {
+                window.cliq24App.showError('Facebook connection failed: ' + errorMsg);
+            }
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1141,6 +1316,62 @@ if (snapchatError) {
     window.history.replaceState({}, document.title, window.location.pathname);
 }
 
+// Handle Twitter connection callback
+const twitterConnected = urlParams.get('twitter_connected');
+const twitterError = urlParams.get('twitter_error');
+
+if (twitterConnected === 'true') {
+    setTimeout(() => {
+        if (window.cliq24App) {
+            window.cliq24App.showSuccess('Twitter connected successfully!');
+            window.cliq24App.loadSocialAccounts();
+        }
+    }, 1000);
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+if (twitterError) {
+    setTimeout(() => {
+        if (window.cliq24App) {
+            const errorMsg = decodeURIComponent(twitterError);
+            if (errorMsg.includes('Account limit reached')) {
+                window.cliq24App.showAccountLimitError();
+            } else {
+                window.cliq24App.showError('Twitter connection failed: ' + errorMsg);
+            }
+        }
+    }, 1000);
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+// Handle YouTube connection callback
+const youtubeConnected = urlParams.get('youtube_connected');
+const youtubeError = urlParams.get('youtube_error');
+
+if (youtubeConnected === 'true') {
+    setTimeout(() => {
+        if (window.cliq24App) {
+            window.cliq24App.showSuccess('YouTube connected successfully!');
+            window.cliq24App.loadSocialAccounts();
+        }
+    }, 1000);
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+if (youtubeError) {
+    setTimeout(() => {
+        if (window.cliq24App) {
+            const errorMsg = decodeURIComponent(youtubeError);
+            if (errorMsg.includes('Account limit reached')) {
+                window.cliq24App.showAccountLimitError();
+            } else {
+                window.cliq24App.showError('YouTube connection failed: ' + errorMsg);
+            }
+        }
+    }, 1000);
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 // Handle TikTok connection callback
 const tiktokConnected = urlParams.get('tiktok_connected');
 const tiktokError = urlParams.get('tiktok_error');
@@ -1158,7 +1389,33 @@ if (tiktokConnected === 'true') {
 if (tiktokError) {
     setTimeout(() => {
         if (window.cliq24App) {
-            window.cliq24App.showError('TikTok connection failed: ' + decodeURIComponent(tiktokError));
+            const errorMsg = decodeURIComponent(tiktokError);
+            if (errorMsg.includes('Account limit reached')) {
+                window.cliq24App.showAccountLimitError();
+            } else {
+                window.cliq24App.showError('TikTok connection failed: ' + errorMsg);
+            }
+        }
+    }, 1000);
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+// Handle subscription success/cancel
+const subscriptionStatus = urlParams.get('subscription');
+if (subscriptionStatus === 'success') {
+    setTimeout(() => {
+        if (window.cliq24App) {
+            window.cliq24App.showSuccess('🎉 Welcome to Premium! You can now connect unlimited accounts.');
+            window.cliq24App.loadSubscriptionStatus();
+        }
+    }, 1000);
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+if (subscriptionStatus === 'canceled') {
+    setTimeout(() => {
+        if (window.cliq24App) {
+            window.cliq24App.showInfo('Subscription upgrade was canceled.');
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);

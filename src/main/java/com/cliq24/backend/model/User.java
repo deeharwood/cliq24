@@ -15,6 +15,13 @@ public class User {
     private String picture;
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // Subscription fields
+    private String subscriptionTier = "FREE"; // FREE, PREMIUM
+    private String subscriptionStatus = "ACTIVE"; // ACTIVE, CANCELED, PAST_DUE, INCOMPLETE
+    private String stripeCustomerId;
+    private String stripeSubscriptionId;
+    private LocalDateTime subscriptionEndsAt;
+
     public User() {
     }
 
@@ -64,6 +71,46 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getSubscriptionTier() {
+        return subscriptionTier;
+    }
+
+    public void setSubscriptionTier(String subscriptionTier) {
+        this.subscriptionTier = subscriptionTier;
+    }
+
+    public String getSubscriptionStatus() {
+        return subscriptionStatus;
+    }
+
+    public void setSubscriptionStatus(String subscriptionStatus) {
+        this.subscriptionStatus = subscriptionStatus;
+    }
+
+    public String getStripeCustomerId() {
+        return stripeCustomerId;
+    }
+
+    public void setStripeCustomerId(String stripeCustomerId) {
+        this.stripeCustomerId = stripeCustomerId;
+    }
+
+    public String getStripeSubscriptionId() {
+        return stripeSubscriptionId;
+    }
+
+    public void setStripeSubscriptionId(String stripeSubscriptionId) {
+        this.stripeSubscriptionId = stripeSubscriptionId;
+    }
+
+    public LocalDateTime getSubscriptionEndsAt() {
+        return subscriptionEndsAt;
+    }
+
+    public void setSubscriptionEndsAt(LocalDateTime subscriptionEndsAt) {
+        this.subscriptionEndsAt = subscriptionEndsAt;
     }
 }
 
