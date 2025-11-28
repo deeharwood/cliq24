@@ -60,33 +60,26 @@
         <!-- Root Logger -->
         <Root level="INFO">
             <AppenderRef ref="AsyncConsole"/>
-            <AppenderRef ref="AsyncFile"/>
-            <AppenderRef ref="AsyncError"/>
         </Root>
-        
+
         <!-- Cliq24 Application Loggers -->
         <Logger name="com.cliq24.backend" level="DEBUG" additivity="false">
             <AppenderRef ref="AsyncConsole"/>
-            <AppenderRef ref="AsyncFile"/>
-            <AppenderRef ref="AsyncError"/>
         </Logger>
-        
+
         <!-- Spring Framework -->
         <Logger name="org.springframework" level="INFO" additivity="false">
             <AppenderRef ref="AsyncConsole"/>
-            <AppenderRef ref="AsyncFile"/>
         </Logger>
-        
+
         <!-- Spring Security -->
         <Logger name="org.springframework.security" level="DEBUG" additivity="false">
             <AppenderRef ref="AsyncConsole"/>
-            <AppenderRef ref="AsyncFile"/>
         </Logger>
-        
+
         <!-- MongoDB -->
         <Logger name="org.springframework.data.mongodb" level="INFO" additivity="false">
             <AppenderRef ref="AsyncConsole"/>
-            <AppenderRef ref="AsyncFile"/>
         </Logger>
         
         <!-- Hibernate Validator -->
