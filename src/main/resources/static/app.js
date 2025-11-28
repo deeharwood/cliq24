@@ -193,18 +193,18 @@ class Cliq24Dashboard {
                 return;
             }
 
-            // YouTube uses real OAuth flow - redirect to authorization
-            if (platform === 'YouTube') {
-                this.showInfo('Redirecting to YouTube...');
+            // YouTube and Snapchat use real OAuth flow - redirect to authorization
+            if (platform === 'YouTube' || platform === 'Snapchat') {
+                this.showInfo(`Redirecting to ${platform}...`);
                 this.closeModal();
 
                 // Pass JWT token as query parameter (remove Bearer prefix)
                 const token = this.jwtToken.replace('Bearer ', '');
-                window.location.href = `${this.apiBaseUrl}/api/social-accounts/YouTube?token=${encodeURIComponent(token)}`;
+                window.location.href = `${this.apiBaseUrl}/api/social-accounts/${platform}?token=${encodeURIComponent(token)}`;
                 return;
             }
 
-            // Other platforms use demo mode for now (including Snapchat until OAuth is fixed)
+            // Other platforms use demo mode for now
             this.showInfo(`Connecting to ${platform}...`);
 
             const response = await this.apiCall(`/api/social-accounts/${platform}`);

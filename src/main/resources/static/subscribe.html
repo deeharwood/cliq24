@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscribe to Cliq24 Premium</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .plans {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .plan {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .plan:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .plan.premium {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            position: relative;
+        }
+
+        .plan.premium::before {
+            content: "POPULAR";
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .plan-name {
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .plan-price {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .plan-price span {
+            font-size: 0.5em;
+            color: #7f8c8d;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .plan-features li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .plan-features li::before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .plan-features li.disabled {
+            color: #bbb;
+        }
+
+        .plan-features li.disabled::before {
+            content: "✗";
+            color: #e74c3c;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .cta-button.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .cta-button.secondary:hover {
+            background: #f8f9fa;
+        }
+
+        .guarantee {
+            background: #e8f4f8;
+            border-left: 4px solid #4A90E2;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .guarantee-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .guarantee p {
+            color: #555;
+        }
+
+        .footer-note {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .footer-note a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer-note a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .plans {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Upgrade to Premium</h1>
+            <p>Unlock unlimited potential for your social media management</p>
+        </div>
+
+        <div class="content">
+            <div class="plans">
+                <!-- Free Plan -->
+                <div class="plan">
+                    <div class="plan-name">Free</div>
+                    <div class="plan-price">$0<span>/month</span></div>
+                    <ul class="plan-features">
+                        <li>Up to 2 social accounts</li>
+                        <li>Basic analytics</li>
+                        <li>Manual sync</li>
+                        <li class="disabled">Unlimited accounts</li>
+                        <li class="disabled">Advanced insights</li>
+                        <li class="disabled">Priority support</li>
+                    </ul>
+                    <a href="/" class="cta-button secondary">Current Plan</a>
+                </div>
+
+                <!-- Premium Plan -->
+                <div class="plan premium">
+                    <div class="plan-name">Premium</div>
+                    <div class="plan-price">$9.99<span>/month</span></div>
+                    <ul class="plan-features">
+                        <li>Unlimited social accounts</li>
+                        <li>Advanced analytics</li>
+                        <li>Automatic sync</li>
+                        <li>Detailed insights</li>
+                        <li>Performance tracking</li>
+                        <li>Priority support</li>
+                    </ul>
+                    <button class="cta-button" id="subscribeBtn">Subscribe Now</button>
+                </div>
+            </div>
+
+            <div class="guarantee">
+                <div class="guarantee-title">7-Day Money-Back Guarantee</div>
+                <p>Try Premium risk-free. If you're not satisfied, get a full refund within 7 days.</p>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <p>
+                By subscribing, you agree to our
+                <a href="/terms-of-service.html" target="_blank">Terms of Service</a>,
+                <a href="/privacy-policy.html" target="_blank">Privacy Policy</a>, and
+                <a href="/refund-policy.html" target="_blank">Refund Policy</a>.
+            </p>
+            <p style="margin-top: 10px;">
+                Payments are securely processed by Stripe. Cancel anytime from your account settings.
+            </p>
+            <p style="margin-top: 15px;">&copy; 2025 Cliq24. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('subscribeBtn').addEventListener('click', async function() {
+            const button = this;
+            const originalText = button.textContent;
+            button.textContent = 'Processing...';
+            button.disabled = true;
+
+            try {
+                // Get JWT token from localStorage or cookie
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    alert('Please log in to subscribe');
+                    window.location.href = '/';
+                    return;
+                }
+
+                // Call the backend to create a checkout session
+                const response = await fetch('/api/subscription/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to create checkout session');
+                }
+
+                const data = await response.json();
+
+                // Redirect to Stripe checkout
+                window.location.href = data.url;
+
+            } catch (error) {
+                console.error('Subscription error:', error);
+                alert('Failed to start checkout: ' + error.message);
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,50 +1,50 @@
-HELP.md
+# Compiled class files
+*.class
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+*.jar
+*.war
+*.ear
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+# IDE files
+.idea/
 .vscode/
+*.iml
+.settings/
+.classpath
+.project
 
-### Sensitive Files ###
-.env
-.env.*
-*.env
-client_secret*.json
+# Logs
 logs/
+*.log
+
+# Environment files (IMPORTANT: Don't commit secrets!)
+.env
+application-local.properties
+
+# SSL certificates (Don't commit to public repos)
+*.p12
+*.jks
+*.pem
+*.key
+*.crt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploaded files
 uploads/
 
-# Credential notes/text files
-LinkedIn.txt
-Snapchat.txt
-instagram.txt
-facebook*.txt
+# Video files
+*.mp4
+*.avi
+*.mov
+
+# Temporary scripts
+start-with-env.ps1
+
+# Secret files
+*.txt
+*.json
+client_secret*.json
 *.docx
-/nul
-src/main/resources/static/stripe auth code.txt

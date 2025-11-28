@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -27,6 +28,7 @@ public class SubscriptionService {
     private String stripePriceId;
 
     private final UserRepository userRepository;
+    private boolean stripeEnabled = false;
 
     @Autowired
     public SubscriptionService(UserRepository userRepository) {
@@ -35,8 +37,24 @@ public class SubscriptionService {
 
     @PostConstruct
     public void init() {
-        Stripe.apiKey = stripeSecretKey;
-        logger.info("Stripe API initialized");
+        // Only initialize Stripe if we have real credentials (not placeholder)
+        if (stripeSecretKey != null && !stripeSecretKey.contains("placeholder")) {
+            try {
+                Stripe.apiKey = stripeSecretKey;
+                stripeEnabled = true;
+                logger.info("Stripe API initialized successfully");
+            } catch (Exception e) {
+                logger.warn("Failed to initialize Stripe API: {}", e.getMessage());
+            }
+        } else {
+            logger.warn("Stripe API not configured - using placeholder values. Subscription features will be disabled.");
+        }
+    }
+
+    private void checkStripeEnabled() {
+        if (!stripeEnabled) {
+            throw new RuntimeException("Stripe is not configured. Please set up Stripe credentials to use subscription features.");
+        }
     }
 
     /**
@@ -62,6 +80,7 @@ public class SubscriptionService {
      * Create a Stripe checkout session for subscription
      */
     public String createCheckoutSession(String userId, String successUrl, String cancelUrl) throws StripeException {
+        checkStripeEnabled();
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
 

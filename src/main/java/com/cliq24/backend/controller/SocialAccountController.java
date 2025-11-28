@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/social-accounts")
-@CrossOrigin(origins = {"http://localhost:3000", "https://cliq24.app"})
+@CrossOrigin(origins = {"http://localhost:3000", "https://localhost:3000", "https://localhost:8443", "https://cliq24.app"})
 public class SocialAccountController {
 
     private final SocialAccountService socialAccountService;
