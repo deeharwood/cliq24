@@ -93,6 +93,26 @@ public class SubscriptionController {
     }
 
     /**
+     * Manually activate premium (for testing when webhooks don't work on localhost)
+     * REMOVE THIS IN PRODUCTION!
+     */
+    @PostMapping("/activate-premium-test")
+    public ResponseEntity<?> activatePremiumTest(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String userId = authService.validateAndExtractUserId(authHeader);
+
+            // Manually activate premium for testing
+            subscriptionService.activateSubscription(userId, "test_customer_id", "test_subscription_id");
+
+            logger.info("Manually activated premium for testing: {}", userId);
+            return ResponseEntity.ok(Map.of("message", "Premium activated for testing"));
+        } catch (Exception e) {
+            logger.error("Error activating premium", e);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * Stripe webhook endpoint
      * This receives events from Stripe about subscription changes
      */

@@ -359,6 +359,31 @@ class Cliq24Dashboard {
                 upgradeBtn.onmouseout = () => upgradeBtn.style.transform = 'scale(1)';
                 upgradeBtn.onclick = () => this.handleUpgrade();
                 header.appendChild(upgradeBtn);
+
+                // Add TEST ONLY button for manual activation (remove in production)
+                const testBtn = document.createElement('button');
+                testBtn.innerHTML = '🧪 Activate Premium (TEST)';
+                testBtn.style.cssText = `
+                    background: #ff6b6b;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    margin-left: 10px;
+                    font-size: 0.9rem;
+                `;
+                testBtn.onclick = async () => {
+                    try {
+                        await this.apiCall('/api/subscription/activate-premium-test', { method: 'POST' });
+                        this.showSuccess('Premium activated! Refreshing...');
+                        setTimeout(() => window.location.reload(), 1000);
+                    } catch (error) {
+                        this.showError('Failed to activate premium');
+                    }
+                };
+                header.appendChild(testBtn);
             }
         }
     }
