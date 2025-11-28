@@ -23,7 +23,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/subscription")
-@CrossOrigin(origins = {"http://localhost:3000", "https://cliq24.app", "https://unmilled-interdentally-galina.ngrok-free.dev"})
+@CrossOrigin(origins = {"http://localhost:3000", "https://cliq24.app"})
 public class SubscriptionController {
 
     private static final Logger logger = LogManager.getLogger(SubscriptionController.class);
@@ -52,8 +52,8 @@ public class SubscriptionController {
         try {
             String userId = authService.validateAndExtractUserId(authHeader);
 
-            String successUrl = "https://unmilled-interdentally-galina.ngrok-free.dev/?subscription=success";
-            String cancelUrl = "https://unmilled-interdentally-galina.ngrok-free.dev/?subscription=canceled";
+            String successUrl = "https://cliq24.app/?subscription=success";
+            String cancelUrl = "https://cliq24.app/?subscription=canceled";
 
             String checkoutUrl = subscriptionService.createCheckoutSession(userId, successUrl, cancelUrl);
 

@@ -438,7 +438,7 @@ public class SocialAccountController {
             HttpServletResponse response) throws IOException {
 
         if (token == null || token.isEmpty()) {
-            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?error=missing_token");
+            response.sendRedirect("https://cliq24.app/?error=missing_token");
             return;
         }
 
@@ -481,7 +481,7 @@ public class SocialAccountController {
             // Get code verifier from storage
             String codeVerifier = getCodeVerifier(state);
             if (codeVerifier == null) {
-                response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?twitter_error=invalid_state");
+                response.sendRedirect("https://cliq24.app/?twitter_error=invalid_state");
                 return;
             }
 
@@ -489,10 +489,10 @@ public class SocialAccountController {
             SocialAccountDTO account = socialAccountService.connectTwitterAccount(token, code, codeVerifier);
 
             // Redirect back to frontend with success
-            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?twitter_connected=true");
+            response.sendRedirect("https://cliq24.app/?twitter_connected=true");
         } catch (Exception e) {
             // Redirect back with error
-            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?twitter_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+            response.sendRedirect("https://cliq24.app/?twitter_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
         }
     }
 
@@ -505,7 +505,7 @@ public class SocialAccountController {
             HttpServletResponse response) throws IOException {
 
         if (token == null || token.isEmpty()) {
-            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?error=missing_token");
+            response.sendRedirect("https://cliq24.app/?error=missing_token");
             return;
         }
 
@@ -543,10 +543,10 @@ public class SocialAccountController {
             SocialAccountDTO account = socialAccountService.connectYouTubeAccount(token, code);
 
             // Redirect back to frontend with success
-            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?youtube_connected=true");
+            response.sendRedirect("https://cliq24.app/?youtube_connected=true");
         } catch (Exception e) {
             // Redirect back with error
-            response.sendRedirect("https://unmilled-interdentally-galina.ngrok-free.dev/?youtube_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+            response.sendRedirect("https://cliq24.app/?youtube_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
         }
     }
 }
