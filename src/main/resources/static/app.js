@@ -17,6 +17,19 @@ class Cliq24Dashboard {
         this.setupEventListeners();
         this.addSVGGradient();
 
+        // Check for JWT token in URL (from OAuth redirect)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+
+        if (tokenFromUrl) {
+            // Store the token
+            localStorage.setItem('cliq24_jwt', tokenFromUrl);
+            this.jwtToken = tokenFromUrl;
+
+            // Clean up the URL (remove token parameter)
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         // Check if user is authenticated
         if (!this.jwtToken) {
             this.showLoginPrompt();
