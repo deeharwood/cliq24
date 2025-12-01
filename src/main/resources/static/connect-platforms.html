@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Platforms - Cliq24</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .marketing-hero {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 5rem 2rem 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .marketing-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero2 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle2 {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .platforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            padding: 1.5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card2 {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .card2:hover {
+            background: var(--glass-hover);
+            transform: translateY(-5px);
+            border-color: var(--ambient-purple);
+        }
+
+        .platform-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .platform-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .platform-card p {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        .features-section {
+            padding: 4rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .features-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--text-primary);
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-item-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .feature-item-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .feature-item-content p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 4rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-purple));
+            border: none;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(178, 75, 243, 0.3);
+        }
+
+        .back-link {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s ease;
+            z-index: 10;
+        }
+
+        .back-link:hover {
+            color: var(--ambient-purple);
+        }
+
+        @media (max-width: 768px) {
+            .marketing-hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .marketing-hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .platforms-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+
+            .platform-card {
+                padding: 1.5rem;
+            }
+
+            .platform-icon {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Ambient Background Effects -->
+    <div class="ambient-bg">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+
+    <a href="/" class="back-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Home
+    </a>
+
+    <section class="marketing-hero">
+        <div class="marketing-content">
+            <h1 class="hero2">Connect All Your Platforms</h1>
+            <p class="subtitle2">
+                Manage all your social media accounts from one powerful dashboard.
+                Connect once, control everything.
+            </p>
+        </div>
+    </section>
+
+    <section class="platforms-grid">
+        <div class="card2">
+            <span class="platform-icon">📘</span>
+            <h3>Facebook</h3>
+            <p>Pages & Profiles</p>
+        </div>
+
+        <div class="card2">
+            <span class="platform-icon">📷</span>
+            <h3>Instagram</h3>
+            <p>Business & Creator</p>
+        </div>
+
+        <div class="card2">
+            <span class="platform-icon">🐦</span>
+            <h3>Twitter/X</h3>
+            <p>Personal & Business</p>
+        </div>
+
+        <div class="card2">
+            <span class="platform-icon">💼</span>
+            <h3>LinkedIn</h3>
+            <p>Profiles & Pages</p>
+        </div>
+
+        <div class="card2">
+            <span class="platform-icon">🎵</span>
+            <h3>TikTok</h3>
+            <p>Creator Accounts</p>
+        </div>
+
+        <div class="card2">
+            <span class="platform-icon">▶️</span>
+            <h3>YouTube</h3>
+            <p>Channels</p>
+        </div>
+
+        <div class="card2">
+            <span class="platform-icon">👻</span>
+            <h3>Snapchat</h3>
+            <p>Public Profiles</p>
+        </div>
+
+        <div class="card2">
+            <span class="platform-icon">➕</span>
+            <h3>More Coming</h3>
+            <p>New platforms added regularly</p>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <h2>How It Works</h2>
+
+        <div class="feature-item">
+            <span class="feature-item-icon">🔐</span>
+            <div class="feature-item-content">
+                <h3>Secure OAuth Connection</h3>
+                <p>
+                    Connect your accounts securely using official OAuth 2.0 authentication.
+                    Your credentials are encrypted and never stored in plain text.
+                </p>
+            </div>
+        </div>
+
+        <div class="feature-item">
+            <span class="feature-item-icon">⚡</span>
+            <div class="feature-item-content">
+                <h3>Instant Synchronization</h3>
+                <p>
+                    Once connected, your account data syncs automatically. See real-time
+                    updates for followers, posts, engagement, and more.
+                </p>
+            </div>
+        </div>
+
+        <div class="feature-item">
+            <span class="feature-item-icon">🎯</span>
+            <div class="feature-item-content">
+                <h3>One-Click Management</h3>
+                <p>
+                    Add or remove platforms anytime with a single click. Full control
+                    over which accounts you want to track and manage.
+                </p>
+            </div>
+        </div>
+
+        <div class="feature-item">
+            <span class="feature-item-icon">🔄</span>
+            <div class="feature-item-content">
+                <h3>Always Up-to-Date</h3>
+                <p>
+                    We automatically refresh your data to ensure you always have the
+                    latest metrics and insights from all your platforms.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <h2 style="font-size: 2rem; margin-bottom: 2rem;">Ready to Connect Your Accounts?</h2>
+        <a href="/" class="cta-button">Get Started Now</a>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2025 Cliq24. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="/privacy-policy.html" target="_blank">Privacy Policy</a>
+                    <a href="/terms-of-service.html" target="_blank">Terms of Service</a>
+                    <a href="/refund-policy.html" target="_blank">Refund Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,9 +1,13 @@
 package com.cliq24.backend.controller;
 
+import com.cliq24.backend.dto.LoginRequestDTO;
+import com.cliq24.backend.dto.LoginResponseDTO;
+import com.cliq24.backend.dto.RegisterRequestDTO;
 import com.cliq24.backend.dto.UserDTO;
 import com.cliq24.backend.service.AuthService;
 import com.cliq24.backend.service.FileStorageService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +17,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = {"http://localhost:3000", "https://cliq24.app"})
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080", "https://localhost:8443", "https://cliq24.app"})
 public class AuthController {
 
     private final AuthService authService;
@@ -74,6 +78,36 @@ public class AuthController {
             UserDTO updatedUser = authService.updateUserPicture(token, pictureUrl);
             return ResponseEntity.ok(updatedUser);
         } catch (IOException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Register new user with email and password
+     * Usage: POST /auth/register
+     * Body: { "name": "John Doe", "email": "john@example.com", "password": "password123" }
+     */
+    @PostMapping("/register")
+    public ResponseEntity<LoginResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
+        try {
+            LoginResponseDTO response = authService.registerWithEmail(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Login with email and password
+     * Usage: POST /auth/login
+     * Body: { "email": "john@example.com", "password": "password123" }
+     */
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
+        try {
+            LoginResponseDTO response = authService.loginWithEmail(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
     }

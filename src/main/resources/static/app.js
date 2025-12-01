@@ -1159,19 +1159,29 @@ class Cliq24Dashboard {
                         </svg>
                         <span>Sign in with Google</span>
                     </button>
+                    <div style="margin: 1.5rem 0; text-align: center; color: var(--text-tertiary); font-size: 0.9rem;">
+                        — or —
+                    </div>
+                    <a href="/register.html" class="register-link" style="display: block; text-align: center; color: var(--ambient-blue); text-decoration: none; font-size: 1rem; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 0.5rem; transition: all 0.3s ease;">
+                        Create an account with email
+                    </a>
+                    <div style="margin-top: 1rem; text-align: center;">
+                        <span style="color: var(--text-tertiary); font-size: 0.85rem;">Already have an account? </span>
+                        <a href="/login.html" style="color: var(--ambient-blue); text-decoration: none; font-size: 0.85rem;">Sign in</a>
+                    </div>
                     <div class="login-features">
-                        <div class="feature-item">
+                        <a href="/track-performance.html" class="feature-item" style="text-decoration: none; color: inherit;">
                             <span class="feature-icon">📊</span>
                             <span>Track Performance</span>
-                        </div>
-                        <div class="feature-item">
+                        </a>
+                        <a href="/connect-platforms.html" class="feature-item" style="text-decoration: none; color: inherit;">
                             <span class="feature-icon">🔗</span>
                             <span>Connect Platforms</span>
-                        </div>
-                        <div class="feature-item">
+                        </a>
+                        <a href="/analyze-metrics.html" class="feature-item" style="text-decoration: none; color: inherit;">
                             <span class="feature-icon">📈</span>
                             <span>Analyze Metrics</span>
-                        </div>
+                        </a>
                     </div>
                     <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
                         <a href="/privacy.html" target="_blank" style="color: var(--text-tertiary); font-size: 0.85rem; text-decoration: none;">Privacy Policy</a>

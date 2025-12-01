@@ -13,6 +13,7 @@ public class User {
     private String email;
     private String name;
     private String picture;
+    private String passwordHash; // For email/password authentication
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // Subscription fields
@@ -111,6 +112,14 @@ public class User {
 
     public void setSubscriptionEndsAt(LocalDateTime subscriptionEndsAt) {
         this.subscriptionEndsAt = subscriptionEndsAt;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }
 

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyze Metrics - Cliq24</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .marketing-hero {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 5rem 2rem 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .marketing-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero2 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--ambient-teal), var(--ambient-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle2 {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 1.5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card2 {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .card2:hover {
+            background: var(--glass-hover);
+            transform: translateY(-5px);
+            border-color: var(--ambient-teal);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .metrics-showcase {
+            padding: 4rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .metrics-showcase h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--text-primary);
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-box {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .metric-label {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--ambient-teal), var(--ambient-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 4rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--ambient-teal), var(--ambient-pink));
+            border: none;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.3);
+        }
+
+        .back-link {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s ease;
+            z-index: 10;
+        }
+
+        .back-link:hover {
+            color: var(--ambient-teal);
+        }
+
+        @media (max-width: 768px) {
+            .marketing-hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .marketing-hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metric-row {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .metric-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Ambient Background Effects -->
+    <div class="ambient-bg">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+
+    <a href="/" class="back-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Home
+    </a>
+
+    <section class="marketing-hero">
+        <div class="marketing-content">
+            <h1 class="hero2">Analyze Your Metrics</h1>
+            <p class="subtitle2">
+                Transform raw data into actionable insights. Understand what's working,
+                identify opportunities, and optimize your social media strategy.
+            </p>
+        </div>
+    </section>
+
+    <section class="feature-grid">
+        <div class="card2">
+            <span class="feature-icon">📊</span>
+            <h3>Comprehensive Dashboard</h3>
+            <p>
+                View all your key metrics in one beautiful, easy-to-understand dashboard.
+                No more switching between platforms to see your performance.
+            </p>
+        </div>
+
+        <div class="card2">
+            <span class="feature-icon">📈</span>
+            <h3>Trend Analysis</h3>
+            <p>
+                Spot patterns and trends in your engagement over time. Understand seasonal
+                variations and the impact of your content strategy.
+            </p>
+        </div>
+
+        <div class="card2">
+            <span class="feature-icon">🎯</span>
+            <h3>Performance Scoring</h3>
+            <p>
+                Get a single, easy-to-understand score that reflects your overall social
+                media performance across all platforms.
+            </p>
+        </div>
+
+        <div class="card2">
+            <span class="feature-icon">🔍</span>
+            <h3>Deep Dive Analytics</h3>
+            <p>
+                Drill down into specific metrics like follower growth, engagement rates,
+                post performance, and audience demographics.
+            </p>
+        </div>
+
+        <div class="card2">
+            <span class="feature-icon">📉</span>
+            <h3>Identify Issues</h3>
+            <p>
+                Quickly spot underperforming platforms or declining metrics so you can
+                take action before it's too late.
+            </p>
+        </div>
+
+        <div class="card2">
+            <span class="feature-icon">💡</span>
+            <h3>Smart Insights</h3>
+            <p>
+                Get AI-powered recommendations on how to improve your engagement and
+                grow your audience more effectively.
+            </p>
+        </div>
+    </section>
+
+    <section class="metrics-showcase">
+        <h2>Track What Matters</h2>
+
+        <div class="metric-row">
+            <div class="metric-box">
+                <div class="metric-label">Total Followers</div>
+                <div class="metric-value">125K+</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">Engagement Rate</div>
+                <div class="metric-value">8.4%</div>
+            </div>
+        </div>
+
+        <div class="metric-row">
+            <div class="metric-box">
+                <div class="metric-label">Monthly Growth</div>
+                <div class="metric-value">+12%</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">Active Posts</div>
+                <div class="metric-value">247</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 3rem; color: var(--text-tertiary);">
+            <p>These are example metrics. Your actual performance may vary.</p>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <h2 style="font-size: 2rem; margin-bottom: 2rem;">Ready to Unlock Your Insights?</h2>
+        <a href="/" class="cta-button">Get Started Now</a>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2025 Cliq24. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="/privacy-policy.html" target="_blank">Privacy Policy</a>
+                    <a href="/terms-of-service.html" target="_blank">Terms of Service</a>
+                    <a href="/refund-policy.html" target="_blank">Refund Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
