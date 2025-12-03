@@ -372,31 +372,6 @@ class Cliq24Dashboard {
                 upgradeBtn.onmouseout = () => upgradeBtn.style.transform = 'scale(1)';
                 upgradeBtn.onclick = () => this.handleUpgrade();
                 header.appendChild(upgradeBtn);
-
-                // Add TEST ONLY button for manual activation (remove in production)
-                const testBtn = document.createElement('button');
-                testBtn.innerHTML = '🧪 Activate Premium (TEST)';
-                testBtn.style.cssText = `
-                    background: #ff6b6b;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 8px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    margin-left: 10px;
-                    font-size: 0.9rem;
-                `;
-                testBtn.onclick = async () => {
-                    try {
-                        await this.apiCall('/api/subscription/activate-premium-test', { method: 'POST' });
-                        this.showSuccess('Premium activated! Refreshing...');
-                        setTimeout(() => window.location.reload(), 1000);
-                    } catch (error) {
-                        this.showError('Failed to activate premium');
-                    }
-                };
-                header.appendChild(testBtn);
             }
         }
     }
@@ -566,12 +541,40 @@ class Cliq24Dashboard {
         grid.innerHTML = '';
 
         if (this.socialAccounts.length === 0) {
+            // Show welcome message and platform selection grid
             grid.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-tertiary);">
-                    <p style="font-size: 1.2rem; margin-bottom: 1rem;">No social accounts connected yet</p>
-                    <p>Click "Connect New Platform" to get started</p>
+                <div style="grid-column: 1/-1; text-align: center; padding: 2rem 1rem; margin-bottom: 2rem;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">👋</div>
+                    <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-teal)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                        Welcome to Cliq24!
+                    </h2>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                        You're not tracking any social accounts yet
+                    </p>
+                    <p style="color: var(--text-tertiary); font-size: 0.95rem;">
+                        Connect your first platform below to start tracking your social media performance
+                    </p>
                 </div>
             `;
+
+            // Create platform selection grid
+            const platformsContainer = document.createElement('div');
+            platformsContainer.style.cssText = `
+                grid-column: 1/-1;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1.5rem;
+                padding: 1rem;
+                max-width: 1000px;
+                margin: 0 auto;
+            `;
+
+            this.allPlatforms.forEach(platform => {
+                const platformCard = this.createEmptyStatePlatformCard(platform);
+                platformsContainer.appendChild(platformCard);
+            });
+
+            grid.appendChild(platformsContainer);
             return;
         }
 
@@ -579,6 +582,71 @@ class Cliq24Dashboard {
             const pod = this.createSocialPod(account);
             grid.appendChild(pod);
         });
+    }
+
+    createEmptyStatePlatformCard(platform) {
+        const card = document.createElement('div');
+        card.className = `empty-state-platform-card platform-${platform.toLowerCase()}`;
+        card.dataset.platform = platform;
+
+        const platformIcon = this.getPlatformIcon(platform);
+        const platformName = this.capitalizePlatform(platform);
+
+        card.style.cssText = `
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        `;
+
+        card.innerHTML = `
+            <div style="font-size: 3rem; margin-bottom: 1rem;">${platformIcon}</div>
+            <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+                ${platformName}
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                Track your ${platformName} performance
+            </div>
+            <div style="
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-teal));
+                border-radius: 0.5rem;
+                color: white;
+                font-size: 0.9rem;
+                font-weight: 600;
+            ">
+                <span>+</span>
+                <span>Connect</span>
+            </div>
+        `;
+
+        // Hover effects
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-8px)';
+            card.style.borderColor = 'var(--ambient-blue)';
+            card.style.boxShadow = '0 10px 30px rgba(0, 212, 255, 0.3)';
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.borderColor = 'var(--glass-border)';
+            card.style.boxShadow = 'none';
+        });
+
+        // Click to connect
+        card.addEventListener('click', () => {
+            this.connectSocialAccount(platform);
+        });
+
+        return card;
     }
 
     createSocialPod(account) {
