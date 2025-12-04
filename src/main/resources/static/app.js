@@ -159,13 +159,24 @@ class Cliq24Dashboard {
     }
 
     async loadSocialAccounts() {
-        const accounts = await this.apiCall('/api/social-accounts');
-        if (accounts) {
-            this.socialAccounts = accounts;
-            this.renderSocialPods();
-            this.updateOverallScore();
-        } else {
-            // Show empty state if no accounts
+        try {
+            console.log('Loading social accounts...');
+            const accounts = await this.apiCall('/api/social-accounts');
+            console.log('Social accounts loaded:', accounts);
+
+            if (accounts) {
+                this.socialAccounts = accounts;
+                this.renderSocialPods();
+                this.updateOverallScore();
+            } else {
+                // Show empty state if no accounts
+                this.socialAccounts = [];
+                this.renderSocialPods();
+                this.updateOverallScore();
+            }
+        } catch (error) {
+            console.error('Failed to load social accounts:', error);
+            // Don't throw - show empty state instead
             this.socialAccounts = [];
             this.renderSocialPods();
             this.updateOverallScore();
@@ -608,8 +619,12 @@ class Cliq24Dashboard {
         }
 
         this.socialAccounts.forEach(account => {
-            const pod = this.createSocialPod(account);
-            grid.appendChild(pod);
+            try {
+                const pod = this.createSocialPod(account);
+                grid.appendChild(pod);
+            } catch (error) {
+                console.error('Failed to create pod for account:', account, error);
+            }
         });
     }
 
