@@ -1,5 +1,10 @@
 // ===== CLIQ24 DASHBOARD APPLICATION =====
 
+// DEBUG: Alert immediately when file loads
+if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    alert('DEBUG: app.js file is loading!');
+}
+
 class Cliq24Dashboard {
     constructor() {
         this.apiBaseUrl = window.location.origin;
