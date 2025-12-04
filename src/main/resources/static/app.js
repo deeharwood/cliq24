@@ -14,12 +14,22 @@ class Cliq24Dashboard {
 
     // ===== INITIALIZATION =====
     async init() {
+        // DEBUG: Alert on mobile to see if JS is running
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            alert('DEBUG: Page loaded, init() running');
+        }
+
         this.setupEventListeners();
         this.addSVGGradient();
 
         // Check for JWT token in URL (from OAuth redirect)
         const urlParams = new URLSearchParams(window.location.search);
         const tokenFromUrl = urlParams.get('token');
+
+        // DEBUG: Show token status
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            alert(`DEBUG: Token in URL: ${tokenFromUrl ? 'YES' : 'NO'}\nToken in storage: ${this.jwtToken ? 'YES' : 'NO'}`);
+        }
 
         if (tokenFromUrl) {
             console.log('[INIT] Token found in URL, storing...');
