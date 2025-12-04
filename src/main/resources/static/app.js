@@ -19,50 +19,13 @@ class Cliq24Dashboard {
 
     // ===== INITIALIZATION =====
     async init() {
-        // DEBUG: Alert on mobile to see if JS is running
-        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            alert('DEBUG: Page loaded, init() running');
-        }
-
         this.setupEventListeners();
         this.addSVGGradient();
 
-        // Check for JWT token in URL (from OAuth redirect)
-        const urlParams = new URLSearchParams(window.location.search);
-        const tokenFromUrl = urlParams.get('token');
-
-        // DEBUG: Show token status
-        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            alert(`DEBUG: Token in URL: ${tokenFromUrl ? 'YES' : 'NO'}\nToken in storage: ${this.jwtToken ? 'YES' : 'NO'}`);
-        }
-
-        if (tokenFromUrl) {
-            console.log('[INIT] Token found in URL, storing...');
-            // Store the token (with iOS Safari fallback)
-            try {
-                localStorage.setItem('cliq24_jwt', tokenFromUrl);
-                console.log('[INIT] Token stored in localStorage');
-            } catch (e) {
-                console.warn('[INIT] localStorage blocked, using sessionStorage');
-                sessionStorage.setItem('cliq24_jwt', tokenFromUrl);
-            }
-
-            // Redirect to clean URL (force page reload to ensure clean state on iOS)
-            console.log('[INIT] Redirecting to clean URL...');
-            window.location.href = window.location.pathname;
-            return; // Stop execution, page will reload
-        }
-
-        // Check if user is authenticated
-        console.log('[INIT] Checking authentication... jwtToken:', this.jwtToken ? 'present' : 'missing');
-        if (!this.jwtToken) {
-            console.log('[INIT] No token, showing login prompt');
-            this.showLoginPrompt();
-            return;
-        }
-
-        // Validate token by trying to load user data
+        // Try to load user data - if authenticated via cookie, this will work
+        // If not authenticated, the API will return 401 and we'll show login
         try {
+            console.log('[INIT] Checking authentication via cookie...');
             await this.loadUserData();
 
             // If user data loaded successfully, user is authenticated
@@ -132,11 +95,13 @@ class Cliq24Dashboard {
             ...options.headers
         };
 
+        // Add Authorization header only if we have a token in localStorage (for email/password login)
+        // For OAuth login, the token is in HttpOnly cookie and sent automatically
         if (this.jwtToken) {
             headers['Authorization'] = `Bearer ${this.jwtToken}`;
-            console.log(`[API] Calling ${endpoint} with token:`, this.jwtToken.substring(0, 20) + '...');
+            console.log(`[API] Calling ${endpoint} with token from localStorage`);
         } else {
-            console.warn(`[API] Calling ${endpoint} WITHOUT token!`);
+            console.log(`[API] Calling ${endpoint} (cookie auth)`);
         }
 
         try {

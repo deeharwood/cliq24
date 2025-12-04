@@ -57,14 +57,17 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // Generate JWT token
         String jwtToken = jwtUtil.generateToken(user.getId(), user.getEmail());
 
-        // Redirect to dashboard with token (frontend is on same server)
-        String redirectUrl = UriComponentsBuilder.fromUriString("/")
-                .queryParam("token", jwtToken)
-                .build()
-                .toUriString();
+        // Set JWT as HttpOnly cookie (works on iOS)
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("cliq24_jwt", jwtToken);
+        cookie.setHttpOnly(true); // JavaScript can't access (more secure)
+        cookie.setSecure(false); // Set to true in production with HTTPS
+        cookie.setPath("/");
+        cookie.setMaxAge(86400); // 24 hours
+        response.addCookie(cookie);
 
-        logger.info("Redirecting to: {}", redirectUrl);
-        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+        logger.info("JWT cookie set, redirecting to /");
+        // Redirect to dashboard (no token in URL needed, it's in cookie)
+        getRedirectStrategy().sendRedirect(request, response, "/");
     }
 
     private User createOrUpdateUser(String googleId, String email, String name, String picture) {
