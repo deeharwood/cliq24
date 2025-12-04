@@ -59,16 +59,45 @@ class Cliq24Dashboard {
 
     // ===== JWT TOKEN MANAGEMENT =====
     getJWTFromStorage() {
-        return localStorage.getItem('cliq24_jwt') || sessionStorage.getItem('cliq24_jwt');
+        try {
+            return localStorage.getItem('cliq24_jwt') || sessionStorage.getItem('cliq24_jwt');
+        } catch (e) {
+            // iOS Safari may block localStorage, fallback to sessionStorage
+            console.warn('localStorage blocked, using sessionStorage:', e);
+            try {
+                return sessionStorage.getItem('cliq24_jwt');
+            } catch (e2) {
+                console.error('Both localStorage and sessionStorage blocked:', e2);
+                return null;
+            }
+        }
     }
 
     saveJWTToStorage(token) {
-        localStorage.setItem('cliq24_jwt', token);
+        try {
+            localStorage.setItem('cliq24_jwt', token);
+        } catch (e) {
+            // iOS Safari may block localStorage, fallback to sessionStorage
+            console.warn('localStorage blocked, using sessionStorage:', e);
+            try {
+                sessionStorage.setItem('cliq24_jwt', token);
+            } catch (e2) {
+                console.error('Both localStorage and sessionStorage blocked:', e2);
+            }
+        }
     }
 
     clearJWTFromStorage() {
-        localStorage.removeItem('cliq24_jwt');
-        sessionStorage.removeItem('cliq24_jwt');
+        try {
+            localStorage.removeItem('cliq24_jwt');
+        } catch (e) {
+            console.warn('localStorage access failed:', e);
+        }
+        try {
+            sessionStorage.removeItem('cliq24_jwt');
+        } catch (e) {
+            console.warn('sessionStorage access failed:', e);
+        }
     }
 
     // ===== API CALLS =====
