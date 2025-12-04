@@ -63,22 +63,34 @@ public class AuthService {
         }
     }
     
+    public UserDTO getUserById(String userId) {
+        logger.debug("Getting user by ID: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    logger.error("User not found: {}", userId);
+                    return new RuntimeException("User not found");
+                });
+
+        return userMapper.toDTO(user);
+    }
+
     public UserDTO getUserFromToken(String authHeader) {
         logger.debug("Extracting user from token");
-        
+
         String token = jwtUtil.extractTokenFromHeader(authHeader);
         if (token == null) {
             logger.warn("Invalid token provided");
             throw new RuntimeException("Invalid token");
         }
-        
+
         String userId = jwtUtil.extractUserId(token);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     logger.error("User not found: {}", userId);
                     return new RuntimeException("User not found");
                 });
-        
+
         return userMapper.toDTO(user);
     }
     

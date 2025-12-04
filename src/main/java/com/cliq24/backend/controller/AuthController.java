@@ -41,11 +41,20 @@ public class AuthController {
 
     /**
      * Get current user information
-     * Usage: GET /auth/me with Authorization: Bearer <token>
+     * Usage: GET /auth/me (authenticated via cookie or Authorization header)
      */
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(@RequestHeader("Authorization") String token) {
-        UserDTO user = authService.getUserFromToken(token);
+    public ResponseEntity<UserDTO> getCurrentUser() {
+        // Get userId from SecurityContext (set by JWT filter from cookie or header)
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userId = auth.getName();
+        UserDTO user = authService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
 

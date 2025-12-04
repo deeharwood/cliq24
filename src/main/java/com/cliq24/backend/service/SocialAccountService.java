@@ -143,13 +143,24 @@ public class SocialAccountService {
 
     public List<SocialAccountDTO> getUserAccounts(String authHeader) {
         logger.info("Fetching social accounts for user");
-        
+
         String userId = authService.validateAndExtractUserId(authHeader);
         logger.debug("User ID extracted: {}", userId);
-        
+
         List<SocialAccount> accounts = socialAccountRepository.findByUserId(userId);
         logger.info("Found {} social accounts for user {}", accounts.size(), userId);
-        
+
+        return accounts.stream()
+                .map(socialAccountMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<SocialAccountDTO> getUserAccountsByUserId(String userId) {
+        logger.info("Fetching social accounts for user: {}", userId);
+
+        List<SocialAccount> accounts = socialAccountRepository.findByUserId(userId);
+        logger.info("Found {} social accounts for user {}", accounts.size(), userId);
+
         return accounts.stream()
                 .map(socialAccountMapper::toDTO)
                 .collect(Collectors.toList());
@@ -159,6 +170,24 @@ public class SocialAccountService {
         logger.info("Disconnecting account: {}", accountId);
 
         String userId = authService.validateAndExtractUserId(authHeader);
+
+        SocialAccount account = socialAccountRepository.findById(accountId)
+                .orElseThrow(() -> {
+                    logger.error("Account not found: {}", accountId);
+                    return new RuntimeException("Account not found");
+                });
+
+        if (!account.getUserId().equals(userId)) {
+            logger.warn("Unauthorized disconnect attempt for account {} by user {}", accountId, userId);
+            throw new RuntimeException("Unauthorized");
+        }
+
+        socialAccountRepository.deleteById(accountId);
+        logger.info("Successfully disconnected account {} for user {}", accountId, userId);
+    }
+
+    public void disconnectAccountByUserId(String accountId, String userId) {
+        logger.info("Disconnecting account: {} for user: {}", accountId, userId);
 
         SocialAccount account = socialAccountRepository.findById(accountId)
                 .orElseThrow(() -> {
@@ -197,10 +226,78 @@ public class SocialAccountService {
         return socialAccountMapper.toDTO(savedAccount);
     }
 
+    public SocialAccountDTO connectAccountByUserId(String platform, String userId, String code) {
+        logger.info("Connecting {} account for user: {}", platform, userId);
+
+        // For now, create a placeholder account
+        // In production, this would exchange the code for access tokens via OAuth
+        SocialAccount account = new SocialAccount();
+        account.setUserId(userId);
+        account.setPlatform(platform.toLowerCase());
+        account.setPlatformUserId("placeholder_" + System.currentTimeMillis());
+        account.setUsername("user_" + platform);
+        account.setAccessToken("encrypted_access_token");
+        account.setConnectedAt(LocalDateTime.now());
+
+        SocialAccount savedAccount = socialAccountRepository.save(account);
+        logger.info("Successfully connected {} account for user {}", platform, userId);
+
+        return socialAccountMapper.toDTO(savedAccount);
+    }
+
     public SocialAccountDTO syncMetrics(String accountId, String authHeader) {
         logger.info("Syncing metrics for account: {}", accountId);
 
         String userId = authService.validateAndExtractUserId(authHeader);
+
+        SocialAccount account = socialAccountRepository.findById(accountId)
+                .orElseThrow(() -> {
+                    logger.error("Account not found: {}", accountId);
+                    return new RuntimeException("Account not found");
+                });
+
+        if (!account.getUserId().equals(userId)) {
+            logger.warn("Unauthorized sync attempt for account {} by user {}", accountId, userId);
+            throw new RuntimeException("Unauthorized");
+        }
+
+        // Sync metrics based on platform
+        switch (account.getPlatform().toLowerCase()) {
+            case "facebook":
+                account.setMetrics(facebookService.syncMetrics(account));
+                break;
+            case "instagram":
+                account.setMetrics(instagramService.syncMetrics(account));
+                break;
+            case "twitter":
+                account.setMetrics(twitterService.syncMetrics(account));
+                break;
+            case "linkedin":
+                account.setMetrics(linkedInService.syncMetrics(account));
+                break;
+            case "tiktok":
+                account.setMetrics(tikTokService.syncMetrics(account));
+                break;
+            case "youtube":
+                account.setMetrics(youTubeService.syncMetrics(account));
+                break;
+            case "snapchat":
+                account.setMetrics(snapchatService.syncMetrics(account));
+                break;
+            default:
+                logger.warn("Unsupported platform: {}", account.getPlatform());
+                throw new RuntimeException("Unsupported platform: " + account.getPlatform());
+        }
+
+        account.setLastSynced(LocalDateTime.now());
+        SocialAccount updatedAccount = socialAccountRepository.save(account);
+
+        logger.info("Successfully synced metrics for account {}", accountId);
+        return socialAccountMapper.toDTO(updatedAccount);
+    }
+
+    public SocialAccountDTO syncMetricsByUserId(String accountId, String userId) {
+        logger.info("Syncing metrics for account: {} for user: {}", accountId, userId);
 
         SocialAccount account = socialAccountRepository.findById(accountId)
                 .orElseThrow(() -> {
