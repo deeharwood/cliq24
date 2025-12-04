@@ -1,10 +1,5 @@
 // ===== CLIQ24 DASHBOARD APPLICATION =====
 
-// DEBUG: Alert immediately when file loads
-if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-    alert('DEBUG: app.js file is loading!');
-}
-
 class Cliq24Dashboard {
     constructor() {
         this.apiBaseUrl = window.location.origin;
@@ -163,10 +158,6 @@ class Cliq24Dashboard {
             }
         } catch (error) {
             console.error('Failed to load subscription status:', error);
-            // DEBUG: Alert on mobile
-            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                alert(`DEBUG: Subscription status failed: ${error.message}`);
-            }
             // Don't throw - subscription is optional
             this.subscriptionStatus = { tier: 'FREE' }; // Default to free tier
         }
@@ -183,10 +174,6 @@ class Cliq24Dashboard {
                 console.log(`[DEBUG] Rendering ${accounts.length} social accounts`);
                 this.renderSocialPods();
                 this.updateOverallScore();
-                // DEBUG: Show success alert on mobile
-                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                    this.showSuccess(`Loaded ${accounts.length} social account(s)`);
-                }
             } else {
                 // Show empty state if no accounts
                 this.socialAccounts = [];
@@ -195,10 +182,6 @@ class Cliq24Dashboard {
             }
         } catch (error) {
             console.error('Failed to load social accounts:', error);
-            // DEBUG: Show error alert on mobile
-            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                alert(`DEBUG: Failed to load social accounts: ${error.message}`);
-            }
             // Don't throw - show empty state instead
             this.socialAccounts = [];
             this.renderSocialPods();
