@@ -124,8 +124,14 @@ class Cliq24Dashboard {
             console.log(`[API] Response status: ${response.status} for ${endpoint}`);
 
             if (response.status === 401) {
-                console.error('[API] 401 Unauthorized - token invalid or expired');
-                this.handleUnauthorized();
+                console.error(`[API] 401 Unauthorized for ${endpoint}`);
+                // Only trigger handleUnauthorized for critical auth endpoints
+                if (endpoint === '/auth/me') {
+                    console.error('[API] Auth endpoint failed - logging out');
+                    this.handleUnauthorized();
+                } else {
+                    console.warn(`[API] Non-critical endpoint ${endpoint} returned 401 - continuing`);
+                }
                 throw new Error('Unauthorized');
             }
 
@@ -158,13 +164,21 @@ class Cliq24Dashboard {
 
     async loadSubscriptionStatus() {
         try {
+            console.log('[DEBUG] Loading subscription status...');
             const status = await this.apiCall('/api/subscription/status');
+            console.log('[DEBUG] Subscription status loaded:', status);
             if (status) {
                 this.subscriptionStatus = status;
                 this.updateSubscriptionUI();
             }
         } catch (error) {
             console.error('Failed to load subscription status:', error);
+            // DEBUG: Alert on mobile
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                alert(`DEBUG: Subscription status failed: ${error.message}`);
+            }
+            // Don't throw - subscription is optional
+            this.subscriptionStatus = { tier: 'FREE' }; // Default to free tier
         }
     }
 
