@@ -22,16 +22,26 @@ class Cliq24Dashboard {
         const tokenFromUrl = urlParams.get('token');
 
         if (tokenFromUrl) {
-            // Store the token
-            localStorage.setItem('cliq24_jwt', tokenFromUrl);
-            this.jwtToken = tokenFromUrl;
+            console.log('[INIT] Token found in URL, storing...');
+            // Store the token (with iOS Safari fallback)
+            try {
+                localStorage.setItem('cliq24_jwt', tokenFromUrl);
+                console.log('[INIT] Token stored in localStorage');
+            } catch (e) {
+                console.warn('[INIT] localStorage blocked, using sessionStorage');
+                sessionStorage.setItem('cliq24_jwt', tokenFromUrl);
+            }
 
-            // Clean up the URL (remove token parameter)
-            window.history.replaceState({}, document.title, window.location.pathname);
+            // Redirect to clean URL (force page reload to ensure clean state on iOS)
+            console.log('[INIT] Redirecting to clean URL...');
+            window.location.href = window.location.pathname;
+            return; // Stop execution, page will reload
         }
 
         // Check if user is authenticated
+        console.log('[INIT] Checking authentication... jwtToken:', this.jwtToken ? 'present' : 'missing');
         if (!this.jwtToken) {
+            console.log('[INIT] No token, showing login prompt');
             this.showLoginPrompt();
             return;
         }
