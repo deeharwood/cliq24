@@ -55,7 +55,7 @@ public class SecurityConfig {
                                 "/api/social-accounts/YouTube", "/api/social-accounts/youtube/callback",
                                 "/api/social-accounts/Snapchat", "/api/social-accounts/snapchat/callback",
                                 "/api/subscription/webhook",
-                                "/uploads/**", "/*.png", "/*.jpg", "/*.css", "/*.js", "/*.html", "/*.txt").permitAll()
+                                "/uploads/**", "/*.png", "/*.jpg", "/*.css", "/*.js", "/*.html", "/*.txt", "/*.json").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
