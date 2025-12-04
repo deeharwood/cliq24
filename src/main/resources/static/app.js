@@ -109,26 +109,36 @@ class Cliq24Dashboard {
 
         if (this.jwtToken) {
             headers['Authorization'] = `Bearer ${this.jwtToken}`;
+            console.log(`[API] Calling ${endpoint} with token:`, this.jwtToken.substring(0, 20) + '...');
+        } else {
+            console.warn(`[API] Calling ${endpoint} WITHOUT token!`);
         }
 
         try {
+            console.log(`[API] Fetching: ${this.apiBaseUrl}${endpoint}`);
             const response = await fetch(`${this.apiBaseUrl}${endpoint}`, {
                 ...options,
                 headers
             });
 
+            console.log(`[API] Response status: ${response.status} for ${endpoint}`);
+
             if (response.status === 401) {
+                console.error('[API] 401 Unauthorized - token invalid or expired');
                 this.handleUnauthorized();
                 throw new Error('Unauthorized');
             }
 
             if (!response.ok) {
+                console.error(`[API] Error ${response.status}: ${response.statusText}`);
                 throw new Error(`API Error: ${response.statusText}`);
             }
 
-            return await response.json();
+            const data = await response.json();
+            console.log(`[API] Success for ${endpoint}:`, data);
+            return data;
         } catch (error) {
-            console.error('API call failed:', error);
+            console.error('[API] Call failed:', error);
             if (error.message === 'Unauthorized') {
                 throw error; // Re-throw auth errors
             }
@@ -166,8 +176,13 @@ class Cliq24Dashboard {
 
             if (accounts) {
                 this.socialAccounts = accounts;
+                console.log(`[DEBUG] Rendering ${accounts.length} social accounts`);
                 this.renderSocialPods();
                 this.updateOverallScore();
+                // DEBUG: Show success alert on mobile
+                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                    this.showSuccess(`Loaded ${accounts.length} social account(s)`);
+                }
             } else {
                 // Show empty state if no accounts
                 this.socialAccounts = [];
@@ -176,6 +191,10 @@ class Cliq24Dashboard {
             }
         } catch (error) {
             console.error('Failed to load social accounts:', error);
+            // DEBUG: Show error alert on mobile
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                alert(`DEBUG: Failed to load social accounts: ${error.message}`);
+            }
             // Don't throw - show empty state instead
             this.socialAccounts = [];
             this.renderSocialPods();
