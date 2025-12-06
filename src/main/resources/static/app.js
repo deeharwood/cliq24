@@ -1081,19 +1081,26 @@ class Cliq24Dashboard {
 
         document.body.appendChild(modal);
 
+        // Helper function to safely remove modal
+        const removeModal = () => {
+            if (modal && modal.parentNode === document.body) {
+                document.body.removeChild(modal);
+            }
+        };
+
         document.getElementById('upgradeNowBtn').addEventListener('click', () => {
-            document.body.removeChild(modal);
+            removeModal();
             this.handleUpgrade();
         });
 
         document.getElementById('closeLimitModal').addEventListener('click', () => {
-            document.body.removeChild(modal);
+            removeModal();
         });
 
         // Close on backdrop click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                document.body.removeChild(modal);
+                removeModal();
             }
         });
     }
@@ -1140,53 +1147,89 @@ class Cliq24Dashboard {
             userInfo.style.display = 'none';
         }
 
-        // Create login screen
+        // Create login screen with scrollable content
         const loginScreen = document.createElement('div');
-        loginScreen.className = 'login-screen';
+        loginScreen.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-primary); z-index: 9999; overflow-y: auto; display: block;';
         loginScreen.innerHTML = `
-            <div class="login-container">
-                <div class="login-content">
-                    <img src="logo.PNG" alt="Cliq24 Logo" class="login-logo" />
-                    <h1 class="login-title">Welcome to CLIQ24</h1>
-                    <p class="login-subtitle">Your Social Media Command Center</p>
-                    <p class="login-description">Connect and manage all your social media accounts in one place. Track engagement, analyze performance, and stay on top of your digital presence.</p>
-                    <button class="login-btn" id="loginBtn">
-                        <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                        </svg>
-                        <span>Sign in with Google</span>
-                    </button>
-                    <div style="margin: 1.5rem 0; text-align: center; color: var(--text-tertiary); font-size: 0.9rem;">
-                        — or —
-                    </div>
-                    <a href="/register.html" class="register-link" style="display: block; text-align: center; color: var(--ambient-blue); text-decoration: none; font-size: 1rem; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 0.5rem; transition: all 0.3s ease;">
-                        Create an account with email
-                    </a>
-                    <div style="margin-top: 1rem; text-align: center;">
-                        <span style="color: var(--text-tertiary); font-size: 0.85rem;">Already have an account? </span>
-                        <a href="/login.html" style="color: var(--ambient-blue); text-decoration: none; font-size: 0.85rem;">Sign in</a>
-                    </div>
-                    <div class="login-features">
-                        <a href="/track-performance.html" class="feature-item" style="text-decoration: none; color: inherit;">
-                            <span class="feature-icon">📊</span>
-                            <span>Track Performance</span>
+            <div style="min-height: 100vh; display: flex; flex-direction: column; padding: 2rem 0;">
+                <div class="login-container" style="max-width: 500px; width: 90%; margin: 0 auto; flex-shrink: 0;">
+                    <div class="login-content">
+                        <img src="logo.PNG" alt="Cliq24 Logo" class="login-logo" />
+                        <h1 class="login-title">Welcome to CLIQ24</h1>
+                        <p class="login-subtitle">Your Social Media Command Center</p>
+                        <p class="login-description">Connect and manage all your social media accounts in one place. Track engagement, analyze performance, and stay on top of your digital presence.</p>
+                        <button class="login-btn" id="loginBtn">
+                            <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            <span>Sign in with Google</span>
+                        </button>
+                        <div style="margin: 1.5rem 0; text-align: center; color: var(--text-tertiary); font-size: 0.9rem;">
+                            — or —
+                        </div>
+                        <a href="/register.html" class="register-link" style="display: block; text-align: center; color: var(--ambient-blue); text-decoration: none; font-size: 1rem; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 0.5rem; transition: all 0.3s ease;">
+                            Create an account with email
                         </a>
-                        <a href="/connect-platforms.html" class="feature-item" style="text-decoration: none; color: inherit;">
-                            <span class="feature-icon">🔗</span>
-                            <span>Connect Platforms</span>
-                        </a>
-                        <a href="/analyze-metrics.html" class="feature-item" style="text-decoration: none; color: inherit;">
-                            <span class="feature-icon">📈</span>
-                            <span>Analyze Metrics</span>
-                        </a>
-                    </div>
-                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                        <a href="/privacy.html" target="_blank" style="color: var(--text-tertiary); font-size: 0.85rem; text-decoration: none;">Privacy Policy</a>
+                        <div style="margin-top: 1rem; text-align: center;">
+                            <span style="color: var(--text-tertiary); font-size: 0.85rem;">Already have an account? </span>
+                            <a href="/login.html" style="color: var(--ambient-blue); text-decoration: none; font-size: 0.85rem;">Sign in</a>
+                        </div>
+                        <div class="login-features">
+                            <a href="/track-performance.html" class="feature-item" style="text-decoration: none; color: inherit;">
+                                <span class="feature-icon">📊</span>
+                                <span>Track Performance</span>
+                            </a>
+                            <a href="/connect-platforms.html" class="feature-item" style="text-decoration: none; color: inherit;">
+                                <span class="feature-icon">🔗</span>
+                                <span>Connect Platforms</span>
+                            </a>
+                            <a href="/analyze-metrics.html" class="feature-item" style="text-decoration: none; color: inherit;">
+                                <span class="feature-icon">📈</span>
+                                <span>Analyze Metrics</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
+
+                <footer class="footer" style="width: 100%; margin-top: auto; padding: 3rem 0 2rem 0; flex-shrink: 0;">
+                    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+                        <div class="footer-content" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+                            <div class="footer-section">
+                                <h4 style="color: var(--ambient-blue); margin-bottom: 1rem; font-size: 1rem; font-weight: 600;">Cliq24</h4>
+                                <p style="color: var(--text-tertiary); font-size: 0.875rem; opacity: 0.7;">&copy; 2025 Cliq24. All rights reserved.</p>
+                            </div>
+                            <div class="footer-section">
+                                <h4 style="color: var(--ambient-blue); margin-bottom: 1rem; font-size: 1rem; font-weight: 600;">Product</h4>
+                                <div class="footer-links" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <a href="/index.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Dashboard</a>
+                                    <a href="/subscribe.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Subscribe</a>
+                                    <a href="/connect-platforms.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Connect Platforms</a>
+                                    <a href="/track-performance.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Track Performance</a>
+                                    <a href="/analyze-metrics.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Analyze Metrics</a>
+                                </div>
+                            </div>
+                            <div class="footer-section">
+                                <h4 style="color: var(--ambient-blue); margin-bottom: 1rem; font-size: 1rem; font-weight: 600;">Account</h4>
+                                <div class="footer-links" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <a href="/login.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Login</a>
+                                    <a href="/register.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Register</a>
+                                </div>
+                            </div>
+                            <div class="footer-section">
+                                <h4 style="color: var(--ambient-blue); margin-bottom: 1rem; font-size: 1rem; font-weight: 600;">Legal</h4>
+                                <div class="footer-links" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <a href="/privacy-policy.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Privacy Policy</a>
+                                    <a href="/terms-of-service.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Terms of Service</a>
+                                    <a href="/refund-policy.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Refund Policy</a>
+                                    <a href="/data-deletion.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; transition: color 0.2s;">Delete My Data</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
             </div>
         `;
 
