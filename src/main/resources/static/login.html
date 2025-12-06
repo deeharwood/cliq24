@@ -368,8 +368,13 @@
                 if (response.ok) {
                     const data = await response.json();
 
-                    // Store JWT token
-                    localStorage.setItem('cliq24_jwt', data.token);
+                    // Store JWT token (with iOS Safari fallback)
+                    try {
+                        localStorage.setItem('cliq24_jwt', data.token);
+                    } catch (e) {
+                        console.warn('localStorage blocked, using sessionStorage');
+                        sessionStorage.setItem('cliq24_jwt', data.token);
+                    }
 
                     // Show success message
                     successMessage.textContent = 'Login successful! Redirecting...';

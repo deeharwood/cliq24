@@ -41,11 +41,20 @@ public class AuthController {
 
     /**
      * Get current user information
-     * Usage: GET /auth/me with Authorization: Bearer <token>
+     * Usage: GET /auth/me (authenticated via cookie or Authorization header)
      */
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(@RequestHeader("Authorization") String token) {
-        UserDTO user = authService.getUserFromToken(token);
+    public ResponseEntity<UserDTO> getCurrentUser() {
+        // Get userId from SecurityContext (set by JWT filter from cookie or header)
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userId = auth.getName();
+        UserDTO user = authService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
 
@@ -88,12 +97,12 @@ public class AuthController {
      * Body: { "name": "John Doe", "email": "john@example.com", "password": "password123" }
      */
     @PostMapping("/register")
-    public ResponseEntity<LoginResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDTO request) {
         try {
             LoginResponseDTO response = authService.registerWithEmail(request);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -103,12 +112,12 @@ public class AuthController {
      * Body: { "email": "john@example.com", "password": "password123" }
      */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO request) {
         try {
             LoginResponseDTO response = authService.loginWithEmail(request);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
         }
     }
 

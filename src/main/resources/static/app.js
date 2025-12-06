@@ -17,27 +17,10 @@ class Cliq24Dashboard {
         this.setupEventListeners();
         this.addSVGGradient();
 
-        // Check for JWT token in URL (from OAuth redirect)
-        const urlParams = new URLSearchParams(window.location.search);
-        const tokenFromUrl = urlParams.get('token');
-
-        if (tokenFromUrl) {
-            // Store the token
-            localStorage.setItem('cliq24_jwt', tokenFromUrl);
-            this.jwtToken = tokenFromUrl;
-
-            // Clean up the URL (remove token parameter)
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        // Check if user is authenticated
-        if (!this.jwtToken) {
-            this.showLoginPrompt();
-            return;
-        }
-
-        // Validate token by trying to load user data
+        // Try to load user data - if authenticated via cookie, this will work
+        // If not authenticated, the API will return 401 and we'll show login
         try {
+            console.log('[INIT] Checking authentication via cookie...');
             await this.loadUserData();
 
             // If user data loaded successfully, user is authenticated
@@ -59,16 +42,45 @@ class Cliq24Dashboard {
 
     // ===== JWT TOKEN MANAGEMENT =====
     getJWTFromStorage() {
-        return localStorage.getItem('cliq24_jwt') || sessionStorage.getItem('cliq24_jwt');
+        try {
+            return localStorage.getItem('cliq24_jwt') || sessionStorage.getItem('cliq24_jwt');
+        } catch (e) {
+            // iOS Safari may block localStorage, fallback to sessionStorage
+            console.warn('localStorage blocked, using sessionStorage:', e);
+            try {
+                return sessionStorage.getItem('cliq24_jwt');
+            } catch (e2) {
+                console.error('Both localStorage and sessionStorage blocked:', e2);
+                return null;
+            }
+        }
     }
 
     saveJWTToStorage(token) {
-        localStorage.setItem('cliq24_jwt', token);
+        try {
+            localStorage.setItem('cliq24_jwt', token);
+        } catch (e) {
+            // iOS Safari may block localStorage, fallback to sessionStorage
+            console.warn('localStorage blocked, using sessionStorage:', e);
+            try {
+                sessionStorage.setItem('cliq24_jwt', token);
+            } catch (e2) {
+                console.error('Both localStorage and sessionStorage blocked:', e2);
+            }
+        }
     }
 
     clearJWTFromStorage() {
-        localStorage.removeItem('cliq24_jwt');
-        sessionStorage.removeItem('cliq24_jwt');
+        try {
+            localStorage.removeItem('cliq24_jwt');
+        } catch (e) {
+            console.warn('localStorage access failed:', e);
+        }
+        try {
+            sessionStorage.removeItem('cliq24_jwt');
+        } catch (e) {
+            console.warn('sessionStorage access failed:', e);
+        }
     }
 
     // ===== API CALLS =====
@@ -78,28 +90,46 @@ class Cliq24Dashboard {
             ...options.headers
         };
 
+        // Add Authorization header only if we have a token in localStorage (for email/password login)
+        // For OAuth login, the token is in HttpOnly cookie and sent automatically
         if (this.jwtToken) {
             headers['Authorization'] = `Bearer ${this.jwtToken}`;
+            console.log(`[API] Calling ${endpoint} with token from localStorage`);
+        } else {
+            console.log(`[API] Calling ${endpoint} (cookie auth)`);
         }
 
         try {
+            console.log(`[API] Fetching: ${this.apiBaseUrl}${endpoint}`);
             const response = await fetch(`${this.apiBaseUrl}${endpoint}`, {
                 ...options,
                 headers
             });
 
+            console.log(`[API] Response status: ${response.status} for ${endpoint}`);
+
             if (response.status === 401) {
-                this.handleUnauthorized();
+                console.error(`[API] 401 Unauthorized for ${endpoint}`);
+                // Only trigger handleUnauthorized for critical auth endpoints
+                if (endpoint === '/auth/me') {
+                    console.error('[API] Auth endpoint failed - logging out');
+                    this.handleUnauthorized();
+                } else {
+                    console.warn(`[API] Non-critical endpoint ${endpoint} returned 401 - continuing`);
+                }
                 throw new Error('Unauthorized');
             }
 
             if (!response.ok) {
+                console.error(`[API] Error ${response.status}: ${response.statusText}`);
                 throw new Error(`API Error: ${response.statusText}`);
             }
 
-            return await response.json();
+            const data = await response.json();
+            console.log(`[API] Success for ${endpoint}:`, data);
+            return data;
         } catch (error) {
-            console.error('API call failed:', error);
+            console.error('[API] Call failed:', error);
             if (error.message === 'Unauthorized') {
                 throw error; // Re-throw auth errors
             }
@@ -119,24 +149,40 @@ class Cliq24Dashboard {
 
     async loadSubscriptionStatus() {
         try {
+            console.log('[DEBUG] Loading subscription status...');
             const status = await this.apiCall('/api/subscription/status');
+            console.log('[DEBUG] Subscription status loaded:', status);
             if (status) {
                 this.subscriptionStatus = status;
                 this.updateSubscriptionUI();
             }
         } catch (error) {
             console.error('Failed to load subscription status:', error);
+            // Don't throw - subscription is optional
+            this.subscriptionStatus = { tier: 'FREE' }; // Default to free tier
         }
     }
 
     async loadSocialAccounts() {
-        const accounts = await this.apiCall('/api/social-accounts');
-        if (accounts) {
-            this.socialAccounts = accounts;
-            this.renderSocialPods();
-            this.updateOverallScore();
-        } else {
-            // Show empty state if no accounts
+        try {
+            console.log('Loading social accounts...');
+            const accounts = await this.apiCall('/api/social-accounts');
+            console.log('Social accounts loaded:', accounts);
+
+            if (accounts) {
+                this.socialAccounts = accounts;
+                console.log(`[DEBUG] Rendering ${accounts.length} social accounts`);
+                this.renderSocialPods();
+                this.updateOverallScore();
+            } else {
+                // Show empty state if no accounts
+                this.socialAccounts = [];
+                this.renderSocialPods();
+                this.updateOverallScore();
+            }
+        } catch (error) {
+            console.error('Failed to load social accounts:', error);
+            // Don't throw - show empty state instead
             this.socialAccounts = [];
             this.renderSocialPods();
             this.updateOverallScore();
@@ -372,31 +418,6 @@ class Cliq24Dashboard {
                 upgradeBtn.onmouseout = () => upgradeBtn.style.transform = 'scale(1)';
                 upgradeBtn.onclick = () => this.handleUpgrade();
                 header.appendChild(upgradeBtn);
-
-                // Add TEST ONLY button for manual activation (remove in production)
-                const testBtn = document.createElement('button');
-                testBtn.innerHTML = '🧪 Activate Premium (TEST)';
-                testBtn.style.cssText = `
-                    background: #ff6b6b;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 8px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    margin-left: 10px;
-                    font-size: 0.9rem;
-                `;
-                testBtn.onclick = async () => {
-                    try {
-                        await this.apiCall('/api/subscription/activate-premium-test', { method: 'POST' });
-                        this.showSuccess('Premium activated! Refreshing...');
-                        setTimeout(() => window.location.reload(), 1000);
-                    } catch (error) {
-                        this.showError('Failed to activate premium');
-                    }
-                };
-                header.appendChild(testBtn);
             }
         }
     }
@@ -566,19 +587,116 @@ class Cliq24Dashboard {
         grid.innerHTML = '';
 
         if (this.socialAccounts.length === 0) {
+            // Show welcome message and platform selection grid
             grid.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-tertiary);">
-                    <p style="font-size: 1.2rem; margin-bottom: 1rem;">No social accounts connected yet</p>
-                    <p>Click "Connect New Platform" to get started</p>
+                <div style="grid-column: 1/-1; text-align: center; padding: 2rem 1rem; margin-bottom: 2rem;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">👋</div>
+                    <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-teal)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                        Welcome to Cliq24!
+                    </h2>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                        You're not tracking any social accounts yet
+                    </p>
+                    <p style="color: var(--text-tertiary); font-size: 0.95rem;">
+                        Connect your first platform below to start tracking your social media performance
+                    </p>
                 </div>
             `;
+
+            // Create platform selection grid
+            const platformsContainer = document.createElement('div');
+            platformsContainer.style.cssText = `
+                grid-column: 1/-1;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1.5rem;
+                padding: 1rem;
+                max-width: 1000px;
+                margin: 0 auto;
+            `;
+
+            this.allPlatforms.forEach(platform => {
+                const platformCard = this.createEmptyStatePlatformCard(platform);
+                platformsContainer.appendChild(platformCard);
+            });
+
+            grid.appendChild(platformsContainer);
             return;
         }
 
         this.socialAccounts.forEach(account => {
-            const pod = this.createSocialPod(account);
-            grid.appendChild(pod);
+            try {
+                const pod = this.createSocialPod(account);
+                grid.appendChild(pod);
+            } catch (error) {
+                console.error('Failed to create pod for account:', account, error);
+            }
         });
+    }
+
+    createEmptyStatePlatformCard(platform) {
+        const card = document.createElement('div');
+        card.className = `empty-state-platform-card platform-${platform.toLowerCase()}`;
+        card.dataset.platform = platform;
+
+        const platformIcon = this.getPlatformIcon(platform);
+        const platformName = this.capitalizePlatform(platform);
+
+        card.style.cssText = `
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        `;
+
+        card.innerHTML = `
+            <div style="font-size: 3rem; margin-bottom: 1rem;">${platformIcon}</div>
+            <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+                ${platformName}
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                Track your ${platformName} performance
+            </div>
+            <div style="
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-teal));
+                border-radius: 0.5rem;
+                color: white;
+                font-size: 0.9rem;
+                font-weight: 600;
+            ">
+                <span>+</span>
+                <span>Connect</span>
+            </div>
+        `;
+
+        // Hover effects
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-8px)';
+            card.style.borderColor = 'var(--ambient-blue)';
+            card.style.boxShadow = '0 10px 30px rgba(0, 212, 255, 0.3)';
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.borderColor = 'var(--glass-border)';
+            card.style.boxShadow = 'none';
+        });
+
+        // Click to connect
+        card.addEventListener('click', () => {
+            this.connectSocialAccount(platform);
+        });
+
+        return card;
     }
 
     createSocialPod(account) {

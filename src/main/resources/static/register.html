@@ -382,8 +382,15 @@
                 if (response.ok) {
                     const data = await response.json();
 
+                    console.log('Registration response:', data);
+
                     // Store JWT token
-                    localStorage.setItem('cliq24_jwt', data.token);
+                    if (data.token) {
+                        localStorage.setItem('cliq24_jwt', data.token);
+                        console.log('JWT token stored:', data.token);
+                    } else {
+                        console.error('No token in response!', data);
+                    }
 
                     // Show success message
                     successMessage.textContent = 'Account created successfully! Redirecting...';

@@ -120,9 +120,17 @@ public class SocialAccountController {
     }
     
     @GetMapping
-    public ResponseEntity<List<SocialAccountDTO>> getUserAccounts(
-            @RequestHeader("Authorization") String token) {
-        List<SocialAccountDTO> accounts = socialAccountService.getUserAccounts(token);
+    public ResponseEntity<List<SocialAccountDTO>> getUserAccounts() {
+        // Get userId from SecurityContext (set by JWT filter from cookie or header)
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userId = auth.getName();
+        List<SocialAccountDTO> accounts = socialAccountService.getUserAccountsByUserId(userId);
         return ResponseEntity.ok(accounts);
     }
 
@@ -396,36 +404,65 @@ public class SocialAccountController {
      * Initiate platform connection (for demo/testing - other platforms)
      */
     @GetMapping("/{platform}")
-    public ResponseEntity<SocialAccountDTO> initiateConnection(
-            @PathVariable String platform,
-            @RequestHeader("Authorization") String token) {
+    public ResponseEntity<SocialAccountDTO> initiateConnection(@PathVariable String platform) {
+        // Get userId from SecurityContext
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userId = auth.getName();
         // For non-Facebook platforms, use demo mode for now
-        SocialAccountDTO account = socialAccountService.connectAccount(platform, token, "demo_code");
+        SocialAccountDTO account = socialAccountService.connectAccountByUserId(platform, userId, "demo_code");
         return ResponseEntity.ok(account);
     }
 
     @PostMapping("/{platform}")
     public ResponseEntity<SocialAccountDTO> connectAccount(
             @PathVariable String platform,
-            @RequestHeader("Authorization") String token,
             @RequestParam String code) {
-        SocialAccountDTO account = socialAccountService.connectAccount(platform, token, code);
+        // Get userId from SecurityContext
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userId = auth.getName();
+        SocialAccountDTO account = socialAccountService.connectAccountByUserId(platform, userId, code);
         return ResponseEntity.ok(account);
     }
-    
+
     @DeleteMapping("/{accountId}")
-    public ResponseEntity<?> disconnectAccount(
-            @PathVariable String accountId,
-            @RequestHeader("Authorization") String token) {
-        socialAccountService.disconnectAccount(accountId, token);
+    public ResponseEntity<?> disconnectAccount(@PathVariable String accountId) {
+        // Get userId from SecurityContext
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userId = auth.getName();
+        socialAccountService.disconnectAccountByUserId(accountId, userId);
         return ResponseEntity.ok().build();
     }
-    
+
     @PostMapping("/{accountId}/sync")
-    public ResponseEntity<SocialAccountDTO> syncMetrics(
-            @PathVariable String accountId,
-            @RequestHeader("Authorization") String token) {
-        SocialAccountDTO account = socialAccountService.syncMetrics(accountId, token);
+    public ResponseEntity<SocialAccountDTO> syncMetrics(@PathVariable String accountId) {
+        // Get userId from SecurityContext
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userId = auth.getName();
+        SocialAccountDTO account = socialAccountService.syncMetricsByUserId(accountId, userId);
         return ResponseEntity.ok(account);
     }
 

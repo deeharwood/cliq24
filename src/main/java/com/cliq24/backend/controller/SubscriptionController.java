@@ -48,9 +48,17 @@ public class SubscriptionController {
      * Create a Stripe checkout session for subscription
      */
     @PostMapping("/create-checkout-session")
-    public ResponseEntity<?> createCheckoutSession(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> createCheckoutSession() {
         try {
-            String userId = authService.validateAndExtractUserId(authHeader);
+            // Get userId from SecurityContext (set by JWT filter from cookie or header)
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            }
+
+            String userId = auth.getName();
 
             String successUrl = "https://cliq24.app/?subscription=success";
             String cancelUrl = "https://cliq24.app/?subscription=canceled";
@@ -74,9 +82,17 @@ public class SubscriptionController {
      * Get current user's subscription status
      */
     @GetMapping("/status")
-    public ResponseEntity<?> getSubscriptionStatus(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getSubscriptionStatus() {
         try {
-            String userId = authService.validateAndExtractUserId(authHeader);
+            // Get userId from SecurityContext (set by JWT filter from cookie or header)
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            }
+
+            String userId = auth.getName();
             User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -97,9 +113,17 @@ public class SubscriptionController {
      * REMOVE THIS IN PRODUCTION!
      */
     @PostMapping("/activate-premium-test")
-    public ResponseEntity<?> activatePremiumTest(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> activatePremiumTest() {
         try {
-            String userId = authService.validateAndExtractUserId(authHeader);
+            // Get userId from SecurityContext (set by JWT filter from cookie or header)
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            }
+
+            String userId = auth.getName();
 
             // Manually activate premium for testing
             subscriptionService.activateSubscription(userId, "test_customer_id", "test_subscription_id");
