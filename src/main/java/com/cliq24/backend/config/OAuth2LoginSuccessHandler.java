@@ -30,6 +30,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @Value("${cors.allowed.origins:http://localhost:3000}")
     private String frontendUrl;
 
+    @Value("${jwt.cookie.secure:false}")
+    private boolean cookieSecure;
+
     @Autowired
     public OAuth2LoginSuccessHandler(UserRepository userRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
@@ -60,12 +63,12 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // Set JWT as HttpOnly cookie (works on iOS)
         jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("cliq24_jwt", jwtToken);
         cookie.setHttpOnly(true); // JavaScript can't access (more secure)
-        cookie.setSecure(false); // Set to true in production with HTTPS
+        cookie.setSecure(cookieSecure); // true in production HTTPS, false in local HTTP dev
         cookie.setPath("/");
         cookie.setMaxAge(86400); // 24 hours
         response.addCookie(cookie);
 
-        logger.info("JWT cookie set, redirecting to /");
+        logger.info("JWT cookie set (secure={}) redirecting to /", cookieSecure);
         // Redirect to dashboard (no token in URL needed, it's in cookie)
         getRedirectStrategy().sendRedirect(request, response, "/");
     }
