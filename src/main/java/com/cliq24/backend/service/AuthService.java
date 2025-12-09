@@ -143,6 +143,21 @@ public class AuthService {
         return userMapper.toDTO(updatedUser);
     }
 
+    public void updateUserPictureById(String userId, String pictureUrl) {
+        logger.debug("Updating profile picture for user: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    logger.error("User not found: {}", userId);
+                    return new RuntimeException("User not found");
+                });
+
+        user.setPicture(pictureUrl);
+        userRepository.save(user);
+
+        logger.info("Profile picture updated for user: {}", user.getEmail());
+    }
+
     public LoginResponseDTO registerWithEmail(RegisterRequestDTO request) {
         logger.info("Registering new user with email: {}", request.getEmail());
 

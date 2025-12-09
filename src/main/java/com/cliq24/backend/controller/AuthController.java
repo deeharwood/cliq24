@@ -8,17 +8,22 @@ import com.cliq24.backend.service.AuthService;
 import com.cliq24.backend.service.FileStorageService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080", "https://localhost:8443", "https://cliq24.app"})
 public class AuthController {
+
+    private static final Logger logger = LogManager.getLogger(AuthController.class);
 
     private final AuthService authService;
     private final FileStorageService fileStorageService;
@@ -74,20 +79,47 @@ public class AuthController {
 
     /**
      * Upload user profile picture file
-     * Usage: POST /auth/me/picture/upload with Authorization: Bearer <token>
+     * Usage: POST /auth/me/picture/upload (authenticated via cookie or Authorization header)
      * Form Data: file (multipart/form-data)
      */
     @PostMapping("/me/picture/upload")
-    public ResponseEntity<UserDTO> uploadProfilePicture(
-            @RequestHeader("Authorization") String token,
+    public ResponseEntity<?> uploadProfilePicture(
             @RequestParam("file") MultipartFile file) {
         try {
-            String userId = authService.validateAndExtractUserId(token);
+            logger.info("Upload request received - file: {}, size: {} bytes",
+                file.getOriginalFilename(), file.getSize());
+
+            // Get userId from SecurityContext (set by JWT filter from cookie or header)
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                logger.warn("Unauthorized upload attempt");
+                return ResponseEntity.status(401)
+                    .body(Map.of("error", "Unauthorized", "message", "Please login first"));
+            }
+
+            String userId = auth.getName();
+            logger.info("Upload for user: {}", userId);
+
             String pictureUrl = fileStorageService.storeProfilePicture(file, userId);
-            UserDTO updatedUser = authService.updateUserPicture(token, pictureUrl);
+
+            // Update user in database
+            authService.updateUserPictureById(userId, pictureUrl);
+
+            // Get updated user
+            UserDTO updatedUser = authService.getUserById(userId);
+
+            logger.info("Profile picture uploaded successfully for user: {}", userId);
             return ResponseEntity.ok(updatedUser);
         } catch (IOException e) {
-            return ResponseEntity.badRequest().build();
+            logger.error("File upload failed: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "File upload failed", "message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error during upload: {}", e.getMessage(), e);
+            return ResponseEntity.status(500)
+                .body(Map.of("error", "Server error", "message", e.getMessage()));
         }
     }
 
