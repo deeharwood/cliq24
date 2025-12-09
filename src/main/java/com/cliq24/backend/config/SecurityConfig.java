@@ -21,14 +21,20 @@ public class SecurityConfig {
     private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     @Autowired
+    private OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+
+    @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @org.springframework.beans.factory.annotation.Value("${cors.allowed.origins}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint((request, response, authException) -> {
@@ -60,7 +66,7 @@ public class SecurityConfig {
             )
             .oauth2Login(oauth2 -> oauth2
                 .successHandler(oAuth2LoginSuccessHandler)
-                .failureUrl("/?error=oauth_failed")
+                .failureHandler(oAuth2LoginFailureHandler)
             );
         return http.build();
     }
@@ -68,9 +74,11 @@ public class SecurityConfig {
       @Bean
       public CorsConfigurationSource corsConfigurationSource() {
           CorsConfiguration configuration = new CorsConfiguration();
-          configuration.setAllowedOrigins(Arrays.asList("*"));
-          configuration.setAllowedMethods(Arrays.asList("*"));
-          configuration.setAllowedHeaders(Arrays.asList("*"));
+          configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+          configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+          configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+          configuration.setAllowCredentials(true);
+          configuration.setMaxAge(3600L);
           UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
           source.registerCorsConfiguration("/**", configuration);
           return source;
