@@ -574,17 +574,23 @@ class Cliq24Dashboard {
                 const formData = new FormData();
                 formData.append('file', selectedFile);
 
-                // Upload file
+                // Prepare headers - only add Authorization if we have a JWT token
+                const headers = {};
+                if (this.jwtToken && typeof this.jwtToken === 'string') {
+                    headers['Authorization'] = `Bearer ${this.jwtToken}`;
+                }
+
+                // Upload file (credentials included for cookie-based auth)
                 const response = await fetch(`${this.apiBaseUrl}/auth/me/picture/upload`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.jwtToken}`
-                    },
+                    headers: headers,
+                    credentials: 'include', // Important for cookie-based authentication
                     body: formData
                 });
 
                 if (!response.ok) {
-                    throw new Error('Upload failed');
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Upload failed');
                 }
 
                 const updatedUser = await response.json();

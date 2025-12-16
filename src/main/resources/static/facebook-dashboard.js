@@ -223,6 +223,13 @@ class FacebookDashboard {
             usernameEl.textContent = '@' + (account.username || 'unknown');
         }
 
+        // Update "View on Facebook" button link
+        const viewOnFacebookBtn = document.getElementById('viewOnFacebookBtn');
+        if (viewOnFacebookBtn && account.platformUserId) {
+            // Facebook page URL format: https://www.facebook.com/{page-id}
+            viewOnFacebookBtn.href = `https://www.facebook.com/${account.platformUserId}`;
+        }
+
         // Update metrics
         const metrics = account.metrics || {};
 
