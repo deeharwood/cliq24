@@ -142,13 +142,24 @@ public class SocialAccountController {
             @RequestParam(required = false) String token,
             HttpServletResponse response) throws IOException {
 
-        if (token == null || token.isEmpty()) {
-            response.sendRedirect("/?error=missing_token");
-            return;
+        String stateToken = token;
+
+        // If no token passed as parameter, try to get userId from SecurityContext (cookie auth)
+        if (stateToken == null || stateToken.isEmpty()) {
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                response.sendRedirect("/?error=not_authenticated");
+                return;
+            }
+
+            // Use userId as state for cookie-authenticated users
+            stateToken = auth.getName();
         }
 
         // Store token in session or pass as state parameter
-        String state = token; // Pass JWT as state (already without Bearer prefix from frontend)
+        String state = stateToken; // Pass JWT or userId as state
 
         String authUrl = String.format(
             "https://www.facebook.com/v18.0/dialog/oauth?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
@@ -171,7 +182,8 @@ public class SocialAccountController {
             HttpServletResponse response) throws IOException {
 
         try {
-            // State contains the JWT token
+            // State can contain either a JWT token or a userId
+            // Pass it with "Bearer " prefix for consistency (service will handle both)
             String token = "Bearer " + state;
 
             // Exchange code for access token and create account
@@ -193,13 +205,24 @@ public class SocialAccountController {
             @RequestParam(required = false) String token,
             HttpServletResponse response) throws IOException {
 
-        if (token == null || token.isEmpty()) {
-            response.sendRedirect("/?error=missing_token");
-            return;
+        String stateToken = token;
+
+        // If no token passed as parameter, try to get userId from SecurityContext (cookie auth)
+        if (stateToken == null || stateToken.isEmpty()) {
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                response.sendRedirect("/?error=not_authenticated");
+                return;
+            }
+
+            // Use userId as state for cookie-authenticated users
+            stateToken = auth.getName();
         }
 
         // Store token in session or pass as state parameter
-        String state = token; // Pass JWT as state (already without Bearer prefix from frontend)
+        String state = stateToken; // Pass JWT or userId as state
 
         String authUrl = String.format(
             "https://www.facebook.com/v18.0/dialog/oauth?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
@@ -244,12 +267,21 @@ public class SocialAccountController {
             @RequestParam(required = false) String token,
             HttpServletResponse response) throws IOException {
 
-        if (token == null || token.isEmpty()) {
-            response.sendRedirect("/?error=missing_token");
-            return;
+        String stateToken = token;
+
+        if (stateToken == null || stateToken.isEmpty()) {
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                response.sendRedirect("/?error=not_authenticated");
+                return;
+            }
+
+            stateToken = auth.getName();
         }
 
-        String state = token;
+        String state = stateToken;
 
         String authUrl = String.format(
             "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&state=%s",
@@ -288,12 +320,21 @@ public class SocialAccountController {
             @RequestParam(required = false) String token,
             HttpServletResponse response) throws IOException {
 
-        if (token == null || token.isEmpty()) {
-            response.sendRedirect("/?error=missing_token");
-            return;
+        String stateToken = token;
+
+        if (stateToken == null || stateToken.isEmpty()) {
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                response.sendRedirect("/?error=not_authenticated");
+                return;
+            }
+
+            stateToken = auth.getName();
         }
 
-        String state = token;
+        String state = stateToken;
 
         // Generate PKCE code verifier and challenge
         String codeVerifier = generateCodeVerifier();
@@ -344,12 +385,21 @@ public class SocialAccountController {
             @RequestParam(required = false) String token,
             HttpServletResponse response) throws IOException {
 
-        if (token == null || token.isEmpty()) {
-            response.sendRedirect("/?error=missing_token");
-            return;
+        String stateToken = token;
+
+        if (stateToken == null || stateToken.isEmpty()) {
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                response.sendRedirect("/?error=not_authenticated");
+                return;
+            }
+
+            stateToken = auth.getName();
         }
 
-        String state = token;
+        String state = stateToken;
 
         // Generate PKCE code verifier and challenge (TikTok requires PKCE)
         String codeVerifier = generateCodeVerifier();
@@ -474,15 +524,24 @@ public class SocialAccountController {
             @RequestParam(required = false) String token,
             HttpServletResponse response) throws IOException {
 
-        if (token == null || token.isEmpty()) {
-            response.sendRedirect("https://cliq24.app/?error=missing_token");
-            return;
+        String stateToken = token;
+
+        if (stateToken == null || stateToken.isEmpty()) {
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                response.sendRedirect("https://cliq24.app/?error=not_authenticated");
+                return;
+            }
+
+            stateToken = auth.getName();
         }
 
         // Generate PKCE parameters
         String codeVerifier = generateCodeVerifier();
         String codeChallenge = generateCodeChallenge(codeVerifier);
-        String state = token; // Use JWT token as state
+        String state = stateToken; // Use JWT token or userId as state
 
         // Store code verifier for callback
         pkceVerifiers.put(state, codeVerifier);
@@ -541,13 +600,22 @@ public class SocialAccountController {
             @RequestParam(required = false) String token,
             HttpServletResponse response) throws IOException {
 
-        if (token == null || token.isEmpty()) {
-            response.sendRedirect("https://cliq24.app/?error=missing_token");
-            return;
+        String stateToken = token;
+
+        if (stateToken == null || stateToken.isEmpty()) {
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                response.sendRedirect("https://cliq24.app/?error=not_authenticated");
+                return;
+            }
+
+            stateToken = auth.getName();
         }
 
-        // Use token as state parameter
-        String state = token;
+        // Use token or userId as state parameter
+        String state = stateToken;
 
         // Google expects space-separated scopes, convert from comma-separated
         String spaceSeparatedScopes = youtubeScope.replace(",", " ");

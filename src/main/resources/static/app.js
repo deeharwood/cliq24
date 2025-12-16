@@ -190,21 +190,24 @@ class Cliq24Dashboard {
     }
 
     async connectSocialAccount(platform) {
-        if (!this.jwtToken) {
-            this.showError('Please log in first');
-            this.showLoginPrompt();
-            return;
-        }
-
         try {
             // Facebook uses real OAuth flow - redirect to authorization
             if (platform === 'Facebook') {
                 this.showInfo('Redirecting to Facebook...');
                 this.closeModal();
 
-                // Pass JWT token as query parameter (remove Bearer prefix)
-                const token = this.jwtToken.replace('Bearer ', '');
-                window.location.href = `${this.apiBaseUrl}/api/social-accounts/Facebook?token=${encodeURIComponent(token)}`;
+                // Pass JWT token as query parameter if available (for email/password login)
+                // For OAuth login, cookie authentication will be used automatically
+                console.log('Connecting to Facebook, jwtToken:', this.jwtToken);
+                if (this.jwtToken && typeof this.jwtToken === 'string') {
+                    const token = this.jwtToken.replace('Bearer ', '');
+                    console.log('Using JWT token for Facebook OAuth');
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/Facebook?token=${encodeURIComponent(token)}`;
+                } else {
+                    // Cookie-based auth, no token parameter needed
+                    console.log('Using cookie-based auth for Facebook OAuth');
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/Facebook`;
+                }
                 return;
             }
 
@@ -213,9 +216,13 @@ class Cliq24Dashboard {
                 this.showInfo('Redirecting to Instagram...');
                 this.closeModal();
 
-                // Pass JWT token as query parameter (remove Bearer prefix)
-                const token = this.jwtToken.replace('Bearer ', '');
-                window.location.href = `${this.apiBaseUrl}/api/social-accounts/Instagram?token=${encodeURIComponent(token)}`;
+                // Pass JWT token as query parameter if available, otherwise use cookie auth
+                if (this.jwtToken) {
+                    const token = this.jwtToken.replace('Bearer ', '');
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/Instagram?token=${encodeURIComponent(token)}`;
+                } else {
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/Instagram`;
+                }
                 return;
             }
 
@@ -224,9 +231,13 @@ class Cliq24Dashboard {
                 this.showInfo('Redirecting to LinkedIn...');
                 this.closeModal();
 
-                // Pass JWT token as query parameter (remove Bearer prefix)
-                const token = this.jwtToken.replace('Bearer ', '');
-                window.location.href = `${this.apiBaseUrl}/api/social-accounts/LinkedIn?token=${encodeURIComponent(token)}`;
+                // Pass JWT token as query parameter if available, otherwise use cookie auth
+                if (this.jwtToken) {
+                    const token = this.jwtToken.replace('Bearer ', '');
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/LinkedIn?token=${encodeURIComponent(token)}`;
+                } else {
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/LinkedIn`;
+                }
                 return;
             }
 
@@ -235,9 +246,13 @@ class Cliq24Dashboard {
                 this.showInfo('Redirecting to Twitter...');
                 this.closeModal();
 
-                // Pass JWT token as query parameter (remove Bearer prefix)
-                const token = this.jwtToken.replace('Bearer ', '');
-                window.location.href = `${this.apiBaseUrl}/api/social-accounts/Twitter?token=${encodeURIComponent(token)}`;
+                // Pass JWT token as query parameter if available, otherwise use cookie auth
+                if (this.jwtToken) {
+                    const token = this.jwtToken.replace('Bearer ', '');
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/Twitter?token=${encodeURIComponent(token)}`;
+                } else {
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/Twitter`;
+                }
                 return;
             }
 
@@ -246,9 +261,13 @@ class Cliq24Dashboard {
                 this.showInfo('Redirecting to TikTok...');
                 this.closeModal();
 
-                // Pass JWT token as query parameter (remove Bearer prefix)
-                const token = this.jwtToken.replace('Bearer ', '');
-                window.location.href = `${this.apiBaseUrl}/api/social-accounts/TikTok?token=${encodeURIComponent(token)}`;
+                // Pass JWT token as query parameter if available, otherwise use cookie auth
+                if (this.jwtToken) {
+                    const token = this.jwtToken.replace('Bearer ', '');
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/TikTok?token=${encodeURIComponent(token)}`;
+                } else {
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/TikTok`;
+                }
                 return;
             }
 
@@ -257,9 +276,13 @@ class Cliq24Dashboard {
                 this.showInfo(`Redirecting to ${platform}...`);
                 this.closeModal();
 
-                // Pass JWT token as query parameter (remove Bearer prefix)
-                const token = this.jwtToken.replace('Bearer ', '');
-                window.location.href = `${this.apiBaseUrl}/api/social-accounts/${platform}?token=${encodeURIComponent(token)}`;
+                // Pass JWT token as query parameter if available, otherwise use cookie auth
+                if (this.jwtToken) {
+                    const token = this.jwtToken.replace('Bearer ', '');
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/${platform}?token=${encodeURIComponent(token)}`;
+                } else {
+                    window.location.href = `${this.apiBaseUrl}/api/social-accounts/${platform}`;
+                }
                 return;
             }
 
@@ -737,6 +760,12 @@ class Cliq24Dashboard {
                 </div>
             </div>
             <div class="pod-actions">
+                ${account.platform === 'Facebook' ? `
+                <button class="pod-action-btn manage" data-id="${account.id}">
+                    <span>📊</span>
+                    <span>Manage</span>
+                </button>
+                ` : ''}
                 <button class="pod-action-btn sync" data-id="${account.id}">
                     <span>🔄</span>
                     <span>Sync</span>
@@ -749,8 +778,17 @@ class Cliq24Dashboard {
         `;
 
         // Add event listeners for action buttons
+        const manageBtn = pod.querySelector('.pod-action-btn.manage');
         const syncBtn = pod.querySelector('.pod-action-btn.sync');
         const disconnectBtn = pod.querySelector('.pod-action-btn.disconnect');
+
+        // Manage button (Facebook only)
+        if (manageBtn) {
+            manageBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.location.href = `/facebook-dashboard.html?id=${account.id}`;
+            });
+        }
 
         syncBtn.addEventListener('click', (e) => {
             e.stopPropagation();
