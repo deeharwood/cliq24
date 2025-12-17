@@ -370,11 +370,22 @@ class Cliq24Dashboard {
         }
 
         if (userAvatar) {
-            // Use 'picture' field from UserDTO (Google profile picture)
+            // Use 'picture' field from UserDTO
             if (user.picture) {
-                userAvatar.style.backgroundImage = `url(${user.picture})`;
-                userAvatar.style.backgroundSize = 'cover';
-                userAvatar.style.backgroundPosition = 'center';
+                // Clear existing background image first to force refresh
+                userAvatar.style.backgroundImage = 'none';
+
+                // Force browser to load new image by using setTimeout
+                setTimeout(() => {
+                    // For data URLs, use directly. For regular URLs, add cache buster
+                    const pictureUrl = user.picture.startsWith('data:')
+                        ? user.picture
+                        : user.picture + '?t=' + Date.now();
+
+                    userAvatar.style.backgroundImage = `url("${pictureUrl}")`;
+                    userAvatar.style.backgroundSize = 'cover';
+                    userAvatar.style.backgroundPosition = 'center';
+                }, 10);
             }
 
             // Make avatar clickable to change picture (only add listener once)
@@ -594,6 +605,12 @@ class Cliq24Dashboard {
                 }
 
                 const updatedUser = await response.json();
+                console.log('[Profile Upload] Updated user data:', {
+                    userId: updatedUser.id,
+                    pictureLength: updatedUser.picture ? updatedUser.picture.length : 0,
+                    pictureType: updatedUser.picture ? (updatedUser.picture.startsWith('data:') ? 'data URL' : 'file URL') : 'none'
+                });
+
                 this.currentUser = updatedUser;
                 this.updateUserUI(updatedUser);
                 this.showSuccess('Profile picture updated successfully!');
