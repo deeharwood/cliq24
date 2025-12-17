@@ -28,6 +28,9 @@ public class AuthController {
     private final AuthService authService;
     private final FileStorageService fileStorageService;
 
+    @org.springframework.beans.factory.annotation.Value("${jwt.cookie.secure:false}")
+    private boolean cookieSecure;
+
     @Autowired
     public AuthController(AuthService authService, FileStorageService fileStorageService) {
         this.authService = authService;
@@ -159,15 +162,19 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
+        // Clear SecurityContext
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+
         // Clear JWT cookie by setting maxAge to 0
+        // IMPORTANT: Cookie settings must EXACTLY match login cookie settings to delete it
         jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("cliq24_jwt", null);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true); // Should match login cookie settings
+        cookie.setSecure(cookieSecure); // Must match login cookie (from configuration)
         cookie.setPath("/");
         cookie.setMaxAge(0); // Delete cookie immediately
         response.addCookie(cookie);
 
-        logger.info("User logged out - JWT cookie cleared");
+        logger.info("User logged out - JWT cookie cleared (secure={})", cookieSecure);
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 

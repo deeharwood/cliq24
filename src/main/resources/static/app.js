@@ -1435,25 +1435,38 @@ class Cliq24Dashboard {
     }
 
     async logout() {
+        console.log('[Logout] Starting logout process...');
+
         try {
             // Call backend logout endpoint to clear HTTP-only cookie
-            await fetch(`${this.apiBaseUrl}/auth/logout`, {
+            const response = await fetch(`${this.apiBaseUrl}/auth/logout`, {
                 method: 'POST',
                 credentials: 'include' // Important to send cookie
             });
 
+            console.log('[Logout] Backend response:', response.status);
+
             // Clear localStorage/sessionStorage JWT (for email/password auth)
             this.clearJWTFromStorage();
 
+            // Clear current user
+            this.currentUser = null;
+
+            console.log('[Logout] Cleared local storage and current user');
+
             this.showSuccess('Logged out successfully');
+
+            // Use replace to prevent back button from going to authenticated state
             setTimeout(() => {
-                window.location.href = '/'; // Redirect to home
-            }, 1000);
+                console.log('[Logout] Redirecting to home...');
+                window.location.replace('/'); // Replace instead of href to clear history
+            }, 500);
         } catch (error) {
-            console.error('Logout error:', error);
-            // Even if backend call fails, clear local storage and redirect
+            console.error('[Logout] Error during logout:', error);
+            // Even if backend call fails, clear everything and redirect
             this.clearJWTFromStorage();
-            window.location.href = '/';
+            this.currentUser = null;
+            window.location.replace('/');
         }
     }
 
