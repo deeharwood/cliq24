@@ -83,15 +83,19 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                     existingUser.setName(name);
 
                     // Only update picture from Google if user hasn't uploaded a custom picture
-                    // Custom pictures start with "/uploads/profile-pictures/"
+                    // Custom pictures: data URLs (data:) or local files (/uploads/)
                     String currentPicture = existingUser.getPicture();
-                    if (currentPicture == null || !currentPicture.startsWith("/uploads/profile-pictures/")) {
+                    boolean hasCustomPicture = currentPicture != null &&
+                        (currentPicture.startsWith("data:") || currentPicture.startsWith("/uploads/"));
+
+                    if (!hasCustomPicture) {
                         // User hasn't uploaded a custom picture, use Google's
                         existingUser.setPicture(picture);
                         logger.info("Using Google profile picture for user: {}", email);
                     } else {
                         // User has a custom uploaded picture, keep it
-                        logger.info("Preserving custom profile picture for user: {}", email);
+                        logger.info("Preserving custom profile picture (type: {}) for user: {}",
+                            currentPicture.startsWith("data:") ? "data URL" : "file", email);
                     }
 
                     return userRepository.save(existingUser);
