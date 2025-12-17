@@ -766,7 +766,7 @@ class Cliq24Dashboard {
                 </div>
             </div>
             <div class="pod-actions">
-                ${account.platform === 'Facebook' ? `
+                ${account.platform?.toLowerCase() === 'facebook' ? `
                 <button class="pod-action-btn manage" data-id="${account.id}">
                     <span>📊</span>
                     <span>Manage</span>
