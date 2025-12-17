@@ -142,13 +142,9 @@ public class SocialAccountService {
     }
 
     public List<SocialAccountDTO> getUserAccounts(String authHeader) {
-        logger.info("Fetching social accounts for user");
-
+        // Removed excessive logging - called on every dashboard load
         String userId = authService.validateAndExtractUserId(authHeader);
-        logger.debug("User ID extracted: {}", userId);
-
         List<SocialAccount> accounts = socialAccountRepository.findByUserId(userId);
-        logger.info("Found {} social accounts for user {}", accounts.size(), userId);
 
         return accounts.stream()
                 .map(socialAccountMapper::toDTO)
@@ -156,10 +152,8 @@ public class SocialAccountService {
     }
 
     public List<SocialAccountDTO> getUserAccountsByUserId(String userId) {
-        logger.info("Fetching social accounts for user: {}", userId);
-
+        // Removed excessive logging - called frequently
         List<SocialAccount> accounts = socialAccountRepository.findByUserId(userId);
-        logger.info("Found {} social accounts for user {}", accounts.size(), userId);
 
         return accounts.stream()
                 .map(socialAccountMapper::toDTO)
@@ -292,12 +286,12 @@ public class SocialAccountService {
         account.setLastSynced(LocalDateTime.now());
         SocialAccount updatedAccount = socialAccountRepository.save(account);
 
-        logger.info("Successfully synced metrics for account {}", accountId);
+        // Removed excessive info logging - sync can happen frequently
         return socialAccountMapper.toDTO(updatedAccount);
     }
 
     public SocialAccountDTO syncMetricsByUserId(String accountId, String userId) {
-        logger.info("Syncing metrics for account: {} for user: {}", accountId, userId);
+        // Removed excessive info logging - sync can happen frequently
 
         SocialAccount account = socialAccountRepository.findById(accountId)
                 .orElseThrow(() -> {

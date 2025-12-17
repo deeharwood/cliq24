@@ -64,8 +64,7 @@ public class AuthService {
     }
     
     public UserDTO getUserById(String userId) {
-        logger.debug("Getting user by ID: {}", userId);
-
+        // Removed excessive debug logging - called on every authenticated request
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     logger.error("User not found: {}", userId);
@@ -76,7 +75,7 @@ public class AuthService {
     }
 
     public UserDTO getUserFromToken(String authHeader) {
-        logger.debug("Extracting user from token");
+        // Removed excessive debug logging - called on every authenticated request
 
         String token = jwtUtil.extractTokenFromHeader(authHeader);
         if (token == null) {
