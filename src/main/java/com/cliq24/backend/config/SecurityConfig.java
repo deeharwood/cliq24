@@ -51,7 +51,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index.html", "/app.js", "/style.css", "/logo.PNG",
                                 "/privacy.html", "/terms.html", "/data-deletion.html",
-                                "/auth/google", "/auth/register", "/auth/login", "/auth/health",
+                                "/auth/google", "/auth/register", "/auth/login", "/auth/logout", "/auth/health",
                                 "/oauth2/**", "/login/**", "/error",
                                 "/api/social-accounts/Facebook", "/api/social-accounts/facebook/callback",
                                 "/api/social-accounts/Instagram", "/api/social-accounts/instagram/callback",

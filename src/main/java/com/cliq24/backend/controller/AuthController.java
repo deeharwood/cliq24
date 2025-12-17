@@ -154,6 +154,24 @@ public class AuthController {
     }
 
     /**
+     * Logout - clears JWT cookie
+     * Usage: POST /auth/logout
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        // Clear JWT cookie by setting maxAge to 0
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("cliq24_jwt", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true); // Should match login cookie settings
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // Delete cookie immediately
+        response.addCookie(cookie);
+
+        logger.info("User logged out - JWT cookie cleared");
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
+
+    /**
      * Health check endpoint
      */
     @GetMapping("/health")

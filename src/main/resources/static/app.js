@@ -1434,12 +1434,27 @@ class Cliq24Dashboard {
         this.showLoginPrompt();
     }
 
-    logout() {
-        this.clearJWTFromStorage();
-        this.showSuccess('Logged out successfully');
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
+    async logout() {
+        try {
+            // Call backend logout endpoint to clear HTTP-only cookie
+            await fetch(`${this.apiBaseUrl}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include' // Important to send cookie
+            });
+
+            // Clear localStorage/sessionStorage JWT (for email/password auth)
+            this.clearJWTFromStorage();
+
+            this.showSuccess('Logged out successfully');
+            setTimeout(() => {
+                window.location.href = '/'; // Redirect to home
+            }, 1000);
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Even if backend call fails, clear local storage and redirect
+            this.clearJWTFromStorage();
+            window.location.href = '/';
+        }
     }
 
     // ===== ADD SVG GRADIENT =====
