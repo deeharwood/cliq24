@@ -1446,40 +1446,28 @@ class Cliq24Dashboard {
         this.showLoginPrompt();
     }
 
-    async logout() {
+    logout() {
         console.log('[Logout] Starting logout process...');
 
-        try {
-            // Call backend logout endpoint to clear HTTP-only cookie
-            const response = await fetch(`${this.apiBaseUrl}/auth/logout`, {
-                method: 'POST',
-                credentials: 'include' // Important to send cookie
-            });
+        // Clear localStorage/sessionStorage JWT immediately
+        this.clearJWTFromStorage();
+        this.currentUser = null;
 
+        console.log('[Logout] Cleared local storage and current user');
+
+        // Call backend to clear cookie (don't wait for response)
+        fetch(`${this.apiBaseUrl}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include'
+        }).then(response => {
             console.log('[Logout] Backend response:', response.status);
+        }).catch(error => {
+            console.error('[Logout] Backend error (ignoring):', error);
+        });
 
-            // Clear localStorage/sessionStorage JWT (for email/password auth)
-            this.clearJWTFromStorage();
-
-            // Clear current user
-            this.currentUser = null;
-
-            console.log('[Logout] Cleared local storage and current user');
-
-            this.showSuccess('Logged out successfully');
-
-            // Use replace with logout flag to prevent loading user data
-            setTimeout(() => {
-                console.log('[Logout] Redirecting with logout flag...');
-                window.location.replace('/?logout=true');
-            }, 300);
-        } catch (error) {
-            console.error('[Logout] Error during logout:', error);
-            // Even if backend call fails, clear everything and redirect
-            this.clearJWTFromStorage();
-            this.currentUser = null;
-            window.location.replace('/?logout=true');
-        }
+        // Redirect immediately (don't wait for backend)
+        console.log('[Logout] Redirecting NOW...');
+        window.location.replace('/?logout=true');
     }
 
     // ===== ADD SVG GRADIENT =====
