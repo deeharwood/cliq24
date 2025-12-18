@@ -17,6 +17,18 @@ class Cliq24Dashboard {
         this.setupEventListeners();
         this.addSVGGradient();
 
+        // Check if we just logged out
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('logout') === 'true') {
+            console.log('[INIT] Logout flag detected - showing login screen');
+            this.clearJWTFromStorage();
+            this.currentUser = null;
+            this.showLoginPrompt();
+            // Clean up URL
+            window.history.replaceState({}, document.title, '/');
+            return;
+        }
+
         // Try to load user data - if authenticated via cookie, this will work
         // If not authenticated, the API will return 401 and we'll show login
         try {
@@ -1456,17 +1468,17 @@ class Cliq24Dashboard {
 
             this.showSuccess('Logged out successfully');
 
-            // Use replace to prevent back button from going to authenticated state
+            // Use replace with logout flag to prevent loading user data
             setTimeout(() => {
-                console.log('[Logout] Redirecting to home...');
-                window.location.replace('/'); // Replace instead of href to clear history
-            }, 500);
+                console.log('[Logout] Redirecting with logout flag...');
+                window.location.replace('/?logout=true');
+            }, 300);
         } catch (error) {
             console.error('[Logout] Error during logout:', error);
             // Even if backend call fails, clear everything and redirect
             this.clearJWTFromStorage();
             this.currentUser = null;
-            window.location.replace('/');
+            window.location.replace('/?logout=true');
         }
     }
 
