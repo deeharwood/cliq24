@@ -1136,7 +1136,12 @@ class Cliq24Dashboard {
         // Logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => this.logout());
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[Event] Logout button clicked');
+                this.logout();
+            });
         }
 
         // Add account button
@@ -1447,27 +1452,48 @@ class Cliq24Dashboard {
     }
 
     logout() {
-        console.log('[Logout] Starting logout process...');
+        try {
+            console.log('[Logout] Starting logout process...');
 
-        // Clear localStorage/sessionStorage JWT immediately
-        this.clearJWTFromStorage();
-        this.currentUser = null;
+            // Clear localStorage/sessionStorage JWT immediately
+            try {
+                this.clearJWTFromStorage();
+            } catch (e) {
+                console.error('[Logout] Error clearing JWT (continuing):', e);
+            }
 
-        console.log('[Logout] Cleared local storage and current user');
+            // Clear current user
+            this.currentUser = null;
 
-        // Call backend to clear cookie (don't wait for response)
-        fetch(`${this.apiBaseUrl}/auth/logout`, {
-            method: 'POST',
-            credentials: 'include'
-        }).then(response => {
-            console.log('[Logout] Backend response:', response.status);
-        }).catch(error => {
-            console.error('[Logout] Backend error (ignoring):', error);
-        });
+            console.log('[Logout] Cleared local storage and current user');
 
-        // Redirect immediately (don't wait for backend)
-        console.log('[Logout] Redirecting NOW...');
-        window.location.replace('/?logout=true');
+            // Call backend to clear cookie (fire and forget - don't wait)
+            try {
+                fetch(`${this.apiBaseUrl}/auth/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                }).then(response => {
+                    console.log('[Logout] Backend response:', response.status);
+                }).catch(error => {
+                    console.error('[Logout] Backend error (ignoring):', error);
+                });
+            } catch (e) {
+                console.error('[Logout] Fetch error (ignoring):', e);
+            }
+
+        } catch (error) {
+            console.error('[Logout] Unexpected error (will still redirect):', error);
+        } finally {
+            // ALWAYS redirect, no matter what errors occurred above
+            console.log('[Logout] Redirecting NOW (forced)...');
+            try {
+                window.location.replace('/?logout=true');
+            } catch (e) {
+                // If replace fails, try href as backup
+                console.error('[Logout] Replace failed, using href:', e);
+                window.location.href = '/?logout=true';
+            }
+        }
     }
 
     // ===== ADD SVG GRADIENT =====
