@@ -1467,18 +1467,24 @@ class Cliq24Dashboard {
 
             console.log('[Logout] Cleared local storage and current user');
 
-            // Call backend to clear cookie (fire and forget - don't wait)
+            // Call backend to clear cookie using sendBeacon (guaranteed to complete even after redirect)
             try {
-                fetch(`${this.apiBaseUrl}/auth/logout`, {
-                    method: 'POST',
-                    credentials: 'include'
-                }).then(response => {
-                    console.log('[Logout] Backend response:', response.status);
-                }).catch(error => {
-                    console.error('[Logout] Backend error (ignoring):', error);
-                });
+                // navigator.sendBeacon is designed for sending data during page unload
+                // It's guaranteed to complete even if the page navigates away
+                const beaconSent = navigator.sendBeacon(`${this.apiBaseUrl}/auth/logout`, '');
+                console.log('[Logout] Beacon sent:', beaconSent);
             } catch (e) {
-                console.error('[Logout] Fetch error (ignoring):', e);
+                console.error('[Logout] Beacon error (ignoring):', e);
+                // Fallback to fetch if sendBeacon not supported
+                try {
+                    fetch(`${this.apiBaseUrl}/auth/logout`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        keepalive: true // Keep request alive during page unload
+                    });
+                } catch (fetchError) {
+                    console.error('[Logout] Fetch fallback error (ignoring):', fetchError);
+                }
             }
 
         } catch (error) {
