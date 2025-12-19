@@ -1451,55 +1451,47 @@ class Cliq24Dashboard {
         this.showLoginPrompt();
     }
 
-    logout() {
+    async logout() {
+        console.log('[Logout] Starting logout process...');
+
+        // Clear localStorage/sessionStorage JWT immediately
         try {
-            console.log('[Logout] Starting logout process...');
-
-            // Clear localStorage/sessionStorage JWT immediately
-            try {
-                this.clearJWTFromStorage();
-            } catch (e) {
-                console.error('[Logout] Error clearing JWT (continuing):', e);
-            }
-
-            // Clear current user
+            this.clearJWTFromStorage();
             this.currentUser = null;
-
             console.log('[Logout] Cleared local storage and current user');
+        } catch (e) {
+            console.error('[Logout] Error clearing storage:', e);
+        }
 
-            // Call backend to clear cookie using sendBeacon (guaranteed to complete even after redirect)
-            try {
-                // navigator.sendBeacon is designed for sending data during page unload
-                // It's guaranteed to complete even if the page navigates away
-                const beaconSent = navigator.sendBeacon(`${this.apiBaseUrl}/auth/logout`, '');
-                console.log('[Logout] Beacon sent:', beaconSent);
-            } catch (e) {
-                console.error('[Logout] Beacon error (ignoring):', e);
-                // Fallback to fetch if sendBeacon not supported
-                try {
-                    fetch(`${this.apiBaseUrl}/auth/logout`, {
-                        method: 'POST',
-                        credentials: 'include',
-                        keepalive: true // Keep request alive during page unload
-                    });
-                } catch (fetchError) {
-                    console.error('[Logout] Fetch fallback error (ignoring):', fetchError);
-                }
-            }
+        // Call backend to clear cookie - WAIT for it to complete (with timeout)
+        try {
+            console.log('[Logout] Calling backend to clear cookie...');
+
+            // Race between logout request and 2-second timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+            const response = await fetch(`${this.apiBaseUrl}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+                keepalive: true,
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+            console.log('[Logout] Backend cleared cookie, status:', response.status);
 
         } catch (error) {
-            console.error('[Logout] Unexpected error (will still redirect):', error);
-        } finally {
-            // ALWAYS redirect, no matter what errors occurred above
-            console.log('[Logout] Redirecting NOW (forced)...');
-            try {
-                window.location.replace('/?logout=true');
-            } catch (e) {
-                // If replace fails, try href as backup
-                console.error('[Logout] Replace failed, using href:', e);
-                window.location.href = '/?logout=true';
+            if (error.name === 'AbortError') {
+                console.warn('[Logout] Backend timeout (2s) - redirecting anyway');
+            } else {
+                console.error('[Logout] Backend error:', error);
             }
         }
+
+        // Now redirect after backend has processed logout
+        console.log('[Logout] Redirecting to login...');
+        window.location.replace('/?logout=true');
     }
 
     // ===== ADD SVG GRADIENT =====
