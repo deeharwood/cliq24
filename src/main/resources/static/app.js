@@ -803,13 +803,135 @@ class Cliq24Dashboard {
         return card;
     }
 
+    /**
+     * Get metrics to display based on user's goals for the platform
+     */
+    getGoalSpecificMetrics(account) {
+        const goals = this.getPlatformGoals(account.platform);
+        const metrics = account.metrics || {};
+        const metricsToShow = [];
+
+        console.log(`[METRICS] Getting metrics for ${account.platform}, goals:`, goals);
+
+        // Check each goal and add relevant metrics
+        goals.forEach(goal => {
+            switch (goal.toLowerCase()) {
+                case 'growth':
+                    metricsToShow.push({
+                        label: 'Followers',
+                        value: this.formatNumber(metrics.connections || 0),
+                        icon: '👥',
+                        priority: 'high'
+                    });
+                    break;
+
+                case 'engagement':
+                    metricsToShow.push({
+                        label: 'Engagement',
+                        value: `${metrics.engagementScore || 0}%`,
+                        icon: '❤️',
+                        priority: 'high'
+                    });
+                    break;
+
+                case 'traffic':
+                    metricsToShow.push({
+                        label: 'Clicks',
+                        value: this.formatNumber(metrics.clicks || 0),
+                        icon: '🔗',
+                        priority: 'high'
+                    });
+                    break;
+
+                case 'response':
+                    metricsToShow.push({
+                        label: 'Pending',
+                        value: this.formatNumber(metrics.pendingResponses || 0),
+                        icon: '⚡',
+                        priority: metrics.pendingResponses > 0 ? 'urgent' : 'high'
+                    });
+                    metricsToShow.push({
+                        label: 'Messages',
+                        value: this.formatNumber(metrics.newMessages || 0),
+                        icon: '💬',
+                        priority: 'normal'
+                    });
+                    break;
+
+                case 'content':
+                    metricsToShow.push({
+                        label: 'Posts',
+                        value: this.formatNumber(metrics.posts || 0),
+                        icon: '📝',
+                        priority: 'high'
+                    });
+                    break;
+
+                case 'comprehensive':
+                    // Show all key metrics
+                    return [
+                        {
+                            label: 'Followers',
+                            value: this.formatNumber(metrics.connections || 0),
+                            icon: '👥',
+                            priority: 'normal'
+                        },
+                        {
+                            label: 'Posts',
+                            value: this.formatNumber(metrics.posts || 0),
+                            icon: '📝',
+                            priority: 'normal'
+                        },
+                        {
+                            label: 'Pending',
+                            value: this.formatNumber(metrics.pendingResponses || 0),
+                            icon: '⚡',
+                            priority: metrics.pendingResponses > 0 ? 'urgent' : 'normal'
+                        },
+                        {
+                            label: 'Messages',
+                            value: this.formatNumber(metrics.newMessages || 0),
+                            icon: '💬',
+                            priority: 'normal'
+                        }
+                    ];
+            }
+        });
+
+        // Remove duplicates (in case user selected multiple goals with overlapping metrics)
+        const uniqueMetrics = metricsToShow.filter((metric, index, self) =>
+            index === self.findIndex(m => m.label === metric.label)
+        );
+
+        // If no metrics, return default comprehensive view
+        if (uniqueMetrics.length === 0) {
+            return this.getGoalSpecificMetrics({ ...account, _forceComprehensive: true });
+        }
+
+        return uniqueMetrics;
+    }
+
     createSocialPod(account) {
         const pod = document.createElement('div');
         pod.className = `social-pod pod-${account.platform.toLowerCase()}`;
 
         const platformIcon = this.getPlatformIcon(account.platform);
-
         const platformName = this.capitalizePlatform(account.platform);
+
+        // Get goal-specific metrics to display
+        const metricsToShow = this.getGoalSpecificMetrics(account);
+
+        // Generate metrics HTML
+        const metricsHTML = metricsToShow.map(metric => {
+            const priorityClass = metric.priority === 'urgent' ? 'urgent' : metric.priority === 'high' ? 'priority' : '';
+            return `
+                <div class="pod-stat ${priorityClass}">
+                    <span class="pod-stat-icon">${metric.icon}</span>
+                    <span class="pod-stat-label">${metric.label}</span>
+                    <span class="pod-stat-value">${metric.value}</span>
+                </div>
+            `;
+        }).join('');
 
         pod.innerHTML = `
             <div class="pod-header">
@@ -823,22 +945,7 @@ class Cliq24Dashboard {
             </div>
             <div class="pod-username">@${account.username || 'username'}</div>
             <div class="pod-stats">
-                <div class="pod-stat">
-                    <span class="pod-stat-label">Followers</span>
-                    <span class="pod-stat-value">${this.formatNumber(account.metrics?.connections || 0)}</span>
-                </div>
-                <div class="pod-stat">
-                    <span class="pod-stat-label">Posts</span>
-                    <span class="pod-stat-value">${this.formatNumber(account.metrics?.posts || 0)}</span>
-                </div>
-                <div class="pod-stat">
-                    <span class="pod-stat-label">Pending</span>
-                    <span class="pod-stat-value">${this.formatNumber(account.metrics?.pendingResponses || 0)}</span>
-                </div>
-                <div class="pod-stat">
-                    <span class="pod-stat-label">Messages</span>
-                    <span class="pod-stat-value">${this.formatNumber(account.metrics?.newMessages || 0)}</span>
-                </div>
+                ${metricsHTML}
             </div>
             <div class="pod-actions">
                 ${account.platform?.toLowerCase() === 'facebook' ? `
