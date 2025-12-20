@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SocialAccountController {
 
     private final SocialAccountService socialAccountService;
+    private final com.cliq24.backend.mapper.SocialAccountMapper socialAccountMapper;
 
     @Value("${spring.security.oauth2.client.registration.facebook.client-id}")
     private String facebookAppId;
@@ -91,8 +92,10 @@ public class SocialAccountController {
     private static final ConcurrentHashMap<String, String> pkceVerifiers = new ConcurrentHashMap<>();
 
     @Autowired
-    public SocialAccountController(SocialAccountService socialAccountService) {
+    public SocialAccountController(SocialAccountService socialAccountService,
+                                   com.cliq24.backend.mapper.SocialAccountMapper socialAccountMapper) {
         this.socialAccountService = socialAccountService;
+        this.socialAccountMapper = socialAccountMapper;
     }
 
     // PKCE helper methods
@@ -159,7 +162,7 @@ public class SocialAccountController {
             }
 
             // Convert to DTO
-            com.cliq24.backend.dto.SocialAccountDTO accountDTO = com.cliq24.backend.mapper.SocialAccountMapper.toDTO(account);
+            com.cliq24.backend.dto.SocialAccountDTO accountDTO = socialAccountMapper.toDTO(account);
             return ResponseEntity.ok(accountDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.status(404)
