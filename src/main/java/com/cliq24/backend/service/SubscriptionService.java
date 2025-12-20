@@ -65,7 +65,7 @@ public class SubscriptionService {
             "ACTIVE".equals(user.getSubscriptionStatus())) {
             return Integer.MAX_VALUE; // Unlimited for premium
         }
-        return 2; // Free tier: 2 accounts
+        return 3; // Free tier: 3 accounts
     }
 
     /**
