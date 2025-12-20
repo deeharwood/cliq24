@@ -121,7 +121,7 @@ class FacebookDashboard {
     async loadAccountData() {
         try {
             console.log(`Loading Facebook account data for ID: ${this.accountId}`);
-            const account = await this.apiCall(`/api/social-accounts/account/${this.accountId}`);
+            const account = await this.apiCall(`/api/social-accounts/${this.accountId}`);
 
             if (account) {
                 this.account = account;
