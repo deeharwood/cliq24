@@ -140,7 +140,7 @@ public class SocialAccountController {
     /**
      * Get a single social account by ID
      */
-    @GetMapping("/{accountId}")
+    @GetMapping("/account/{accountId}")
     public ResponseEntity<?> getAccountById(@PathVariable String accountId) {
         org.springframework.security.core.Authentication auth =
             org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
