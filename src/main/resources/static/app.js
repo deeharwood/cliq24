@@ -1049,12 +1049,19 @@ class Cliq24Dashboard {
      */
     async loadInsights(accountId) {
         try {
+            console.log('[INSIGHTS] Loading insights for account:', accountId);
             const insightsContent = document.querySelector(`#insights-${accountId} .insights-content`);
-            if (!insightsContent) return;
+            if (!insightsContent) {
+                console.error('[INSIGHTS] Could not find insights-content element for:', accountId);
+                return;
+            }
 
+            console.log('[INSIGHTS] Setting loading state...');
             insightsContent.innerHTML = '<div class="insights-loading">Generating insight...</div>';
 
+            console.log('[INSIGHTS] Calling API...');
             const response = await this.apiCall(`/api/insights/${accountId}`);
+            console.log('[INSIGHTS] Got response:', response);
 
             if (response && response.insight) {
                 insightsContent.innerHTML = `
