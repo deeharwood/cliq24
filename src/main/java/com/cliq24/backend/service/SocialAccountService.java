@@ -159,7 +159,12 @@ public class SocialAccountService {
                 .map(socialAccountMapper::toDTO)
                 .collect(Collectors.toList());
     }
-    
+
+    public SocialAccount getAccountById(String accountId) {
+        return socialAccountRepository.findById(accountId)
+            .orElseThrow(() -> new RuntimeException("Social account not found with ID: " + accountId));
+    }
+
     public void disconnectAccount(String accountId, String authHeader) {
         logger.info("Disconnecting account: {}", accountId);
 

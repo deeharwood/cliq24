@@ -135,6 +135,39 @@ public class SocialAccountController {
     }
 
     /**
+     * Get a single social account by ID
+     */
+    @GetMapping("/{accountId}")
+    public ResponseEntity<?> getAccountById(@PathVariable String accountId) {
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401)
+                .body(java.util.Map.of("error", "Unauthorized", "message", "Please login first"));
+        }
+
+        String userId = auth.getName();
+
+        try {
+            com.cliq24.backend.model.SocialAccount account = socialAccountService.getAccountById(accountId);
+
+            // Verify the account belongs to this user
+            if (!account.getUserId().equals(userId)) {
+                return ResponseEntity.status(403)
+                    .body(java.util.Map.of("error", "Forbidden", "message", "This account does not belong to you"));
+            }
+
+            // Convert to DTO
+            com.cliq24.backend.dto.SocialAccountDTO accountDTO = com.cliq24.backend.mapper.SocialAccountMapper.toDTO(account);
+            return ResponseEntity.ok(accountDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404)
+                .body(java.util.Map.of("error", "Not found", "message", e.getMessage()));
+        }
+    }
+
+    /**
      * Initiate Facebook OAuth connection
      */
     @GetMapping("/Facebook")
