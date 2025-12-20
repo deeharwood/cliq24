@@ -947,6 +947,18 @@ class Cliq24Dashboard {
             <div class="pod-stats">
                 ${metricsHTML}
             </div>
+            <div class="pod-insights" id="insights-${account.id}">
+                <div class="insights-header">
+                    <span class="insights-icon">🤖</span>
+                    <span class="insights-label">AI Insight</span>
+                    <button class="insights-refresh" data-id="${account.id}" title="Refresh insight">
+                        <span>🔄</span>
+                    </button>
+                </div>
+                <div class="insights-content">
+                    <div class="insights-loading">Generating insight...</div>
+                </div>
+            </div>
             <div class="pod-actions">
                 ${account.platform?.toLowerCase() === 'facebook' ? `
                 <button class="pod-action-btn manage" data-id="${account.id}">
@@ -992,7 +1004,98 @@ class Cliq24Dashboard {
             );
         });
 
+        // Insights refresh button
+        const refreshInsightsBtn = pod.querySelector('.insights-refresh');
+        if (refreshInsightsBtn) {
+            refreshInsightsBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await this.refreshInsights(account.id);
+            });
+        }
+
+        // Load insights after creating the pod
+        this.loadInsights(account.id);
+
         return pod;
+    }
+
+    /**
+     * Load AI insights for an account
+     */
+    async loadInsights(accountId) {
+        try {
+            const insightsContent = document.querySelector(`#insights-${accountId} .insights-content`);
+            if (!insightsContent) return;
+
+            insightsContent.innerHTML = '<div class="insights-loading">Generating insight...</div>';
+
+            const response = await this.apiCall(`/api/insights/${accountId}`);
+
+            if (response && response.insight) {
+                insightsContent.innerHTML = `
+                    <div class="insights-text">${response.insight}</div>
+                `;
+            } else {
+                insightsContent.innerHTML = `
+                    <div class="insights-text insights-placeholder">
+                        Keep posting and engaging to get personalized AI insights!
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Failed to load insights:', error);
+            const insightsContent = document.querySelector(`#insights-${accountId} .insights-content`);
+            if (insightsContent) {
+                insightsContent.innerHTML = `
+                    <div class="insights-text insights-placeholder">
+                        Keep posting and engaging to get personalized AI insights!
+                    </div>
+                `;
+            }
+        }
+    }
+
+    /**
+     * Refresh insights for an account
+     */
+    async refreshInsights(accountId) {
+        try {
+            const refreshBtn = document.querySelector(`.insights-refresh[data-id="${accountId}"]`);
+            const insightsContent = document.querySelector(`#insights-${accountId} .insights-content`);
+
+            if (refreshBtn) {
+                refreshBtn.disabled = true;
+                refreshBtn.style.opacity = '0.5';
+            }
+
+            if (insightsContent) {
+                insightsContent.innerHTML = '<div class="insights-loading">Generating new insight...</div>';
+            }
+
+            const response = await this.apiCall(`/api/insights/${accountId}/refresh`, {
+                method: 'POST'
+            });
+
+            if (response && response.insight) {
+                insightsContent.innerHTML = `
+                    <div class="insights-text">${response.insight}</div>
+                `;
+            }
+
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.style.opacity = '1';
+            }
+        } catch (error) {
+            console.error('Failed to refresh insights:', error);
+            this.showError('Failed to refresh insight. Please try again.');
+
+            const refreshBtn = document.querySelector(`.insights-refresh[data-id="${accountId}"]`);
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.style.opacity = '1';
+            }
+        }
     }
 
     updateOverallScore() {
