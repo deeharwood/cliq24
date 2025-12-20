@@ -423,7 +423,7 @@ public class SocialAccountService {
                 // Create new account
                 SocialAccount account = new SocialAccount();
                 account.setUserId(userId);
-                account.setPlatform("facebook");
+                account.setPlatform("Facebook");
                 account.setPlatformUserId(facebookId);
                 account.setUsername(name);
                 account.setAccessToken(accessToken);
@@ -516,7 +516,7 @@ public class SocialAccountService {
         // Create new demo account
         SocialAccount account = new SocialAccount();
         account.setUserId(userId);
-        account.setPlatform("instagram");
+        account.setPlatform("Instagram");
         account.setPlatformUserId("demo_instagram_" + System.currentTimeMillis());
         account.setUsername("your_instagram");
         account.setAccessToken("demo_access_token");
@@ -619,7 +619,7 @@ public class SocialAccountService {
             } else {
                 SocialAccount account = new SocialAccount();
                 account.setUserId(userId);
-                account.setPlatform("linkedin");
+                account.setPlatform("LinkedIn");
                 account.setPlatformUserId(linkedInId);
                 account.setUsername(name != null ? name : email);
                 account.setAccessToken(accessToken);
@@ -683,7 +683,7 @@ public class SocialAccountService {
             } else {
                 SocialAccount account = new SocialAccount();
                 account.setUserId(userId);
-                account.setPlatform("twitter");
+                account.setPlatform("Twitter");
                 account.setPlatformUserId(twitterId);
                 account.setUsername(username);
                 account.setAccountName(name);
@@ -753,7 +753,7 @@ public class SocialAccountService {
             } else {
                 SocialAccount account = new SocialAccount();
                 account.setUserId(userId);
-                account.setPlatform("youtube");
+                account.setPlatform("YouTube");
                 account.setPlatformUserId(channelId);
                 account.setUsername(channelTitle);
                 account.setAccountName(channelTitle);
@@ -854,7 +854,7 @@ public class SocialAccountService {
             } else {
                 SocialAccount account = new SocialAccount();
                 account.setUserId(userId);
-                account.setPlatform("snapchat");
+                account.setPlatform("Snapchat");
                 account.setPlatformUserId(snapchatId);
                 account.setUsername(displayName);
                 account.setAccessToken(accessToken);
@@ -991,7 +991,7 @@ public class SocialAccountService {
             } else {
                 SocialAccount account = new SocialAccount();
                 account.setUserId(userId);
-                account.setPlatform("tiktok");
+                account.setPlatform("TikTok");
                 account.setPlatformUserId(tiktokId);
                 account.setUsername(accountName);
                 account.setAccessToken(accessToken);
