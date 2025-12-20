@@ -905,7 +905,32 @@ class Cliq24Dashboard {
 
         // If no metrics, return default comprehensive view
         if (uniqueMetrics.length === 0) {
-            return this.getGoalSpecificMetrics({ ...account, _forceComprehensive: true });
+            return [
+                {
+                    label: 'Followers',
+                    value: this.formatNumber(metrics.connections || 0),
+                    icon: '👥',
+                    priority: 'normal'
+                },
+                {
+                    label: 'Posts',
+                    value: this.formatNumber(metrics.posts || 0),
+                    icon: '📝',
+                    priority: 'normal'
+                },
+                {
+                    label: 'Pending',
+                    value: this.formatNumber(metrics.pendingResponses || 0),
+                    icon: '⚡',
+                    priority: metrics.pendingResponses > 0 ? 'urgent' : 'normal'
+                },
+                {
+                    label: 'Messages',
+                    value: this.formatNumber(metrics.newMessages || 0),
+                    icon: '💬',
+                    priority: 'normal'
+                }
+            ];
         }
 
         return uniqueMetrics;
