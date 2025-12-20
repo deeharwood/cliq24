@@ -7,6 +7,7 @@ class Cliq24Dashboard {
         this.socialAccounts = [];
         this.currentUser = null;
         this.subscriptionStatus = null;
+        this.userPreferences = {}; // Store user's platform goals/preferences
         this.allPlatforms = ['Facebook', 'Instagram', 'Twitter', 'LinkedIn', 'TikTok', 'YouTube', 'Snapchat'];
         this.confirmCallback = null;
         this.init();
@@ -37,6 +38,7 @@ class Cliq24Dashboard {
 
             // If user data loaded successfully, user is authenticated
             if (this.currentUser) {
+                await this.loadUserPreferences(); // Load user's goal preferences
                 await this.loadSocialAccounts();
                 this.startAutoSync();
             } else {
@@ -173,6 +175,50 @@ class Cliq24Dashboard {
             // Don't throw - subscription is optional
             this.subscriptionStatus = { tier: 'FREE' }; // Default to free tier
         }
+    }
+
+    // ===== USER PREFERENCES =====
+    async loadUserPreferences() {
+        try {
+            console.log('[PREFERENCES] Loading user preferences...');
+            const response = await this.apiCall('/api/preferences');
+            if (response && response.platformGoals) {
+                this.userPreferences = response.platformGoals;
+                console.log('[PREFERENCES] Loaded:', this.userPreferences);
+            } else {
+                this.userPreferences = {};
+            }
+        } catch (error) {
+            console.error('Failed to load user preferences:', error);
+            this.userPreferences = {}; // Default to empty
+        }
+    }
+
+    /**
+     * Check if user has set goals for a platform
+     * If not, redirect to goal selection page
+     */
+    async checkAndPromptForGoals(platform) {
+        const platformLower = platform.toLowerCase();
+
+        // Check if user has already set preferences for this platform
+        if (this.userPreferences && this.userPreferences[platformLower]) {
+            console.log(`[PREFERENCES] User has goals for ${platform}:`, this.userPreferences[platformLower]);
+            return; // User has preferences, no need to prompt
+        }
+
+        console.log(`[PREFERENCES] No goals set for ${platform}, redirecting to goal selection...`);
+
+        // Redirect to goal selection page
+        window.location.href = `/goal-selection.html?platform=${platformLower}`;
+    }
+
+    /**
+     * Get user's goals for a platform
+     */
+    getPlatformGoals(platform) {
+        const platformLower = platform.toLowerCase();
+        return this.userPreferences[platformLower] || ['comprehensive'];
     }
 
     async loadSocialAccounts() {
@@ -1549,10 +1595,12 @@ const facebookConnected = urlParams.get('facebook_connected');
 const facebookError = urlParams.get('facebook_error');
 
 if (facebookConnected === 'true') {
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.cliq24App) {
             window.cliq24App.showSuccess('Facebook connected successfully!');
-            window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadUserPreferences();
+            await window.cliq24App.checkAndPromptForGoals('Facebook');
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1577,10 +1625,12 @@ const instagramConnected = urlParams.get('instagram_connected');
 const instagramError = urlParams.get('instagram_error');
 
 if (instagramConnected === 'true') {
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.cliq24App) {
             window.cliq24App.showSuccess('Instagram connected successfully!');
-            window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadUserPreferences();
+            await window.cliq24App.checkAndPromptForGoals('Instagram');
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1600,10 +1650,12 @@ const linkedinConnected = urlParams.get('linkedin_connected');
 const linkedinError = urlParams.get('linkedin_error');
 
 if (linkedinConnected === 'true') {
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.cliq24App) {
             window.cliq24App.showSuccess('LinkedIn connected successfully!');
-            window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadUserPreferences();
+            await window.cliq24App.checkAndPromptForGoals('LinkedIn');
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1623,10 +1675,12 @@ const snapchatConnected = urlParams.get('snapchat_connected');
 const snapchatError = urlParams.get('snapchat_error');
 
 if (snapchatConnected === 'true') {
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.cliq24App) {
             window.cliq24App.showSuccess('Snapchat connected successfully!');
-            window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadUserPreferences();
+            await window.cliq24App.checkAndPromptForGoals('Snapchat');
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1646,10 +1700,12 @@ const twitterConnected = urlParams.get('twitter_connected');
 const twitterError = urlParams.get('twitter_error');
 
 if (twitterConnected === 'true') {
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.cliq24App) {
             window.cliq24App.showSuccess('Twitter connected successfully!');
-            window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadUserPreferences();
+            await window.cliq24App.checkAndPromptForGoals('Twitter');
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1674,10 +1730,12 @@ const youtubeConnected = urlParams.get('youtube_connected');
 const youtubeError = urlParams.get('youtube_error');
 
 if (youtubeConnected === 'true') {
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.cliq24App) {
             window.cliq24App.showSuccess('YouTube connected successfully!');
-            window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadUserPreferences();
+            await window.cliq24App.checkAndPromptForGoals('YouTube');
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1702,10 +1760,12 @@ const tiktokConnected = urlParams.get('tiktok_connected');
 const tiktokError = urlParams.get('tiktok_error');
 
 if (tiktokConnected === 'true') {
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.cliq24App) {
             window.cliq24App.showSuccess('TikTok connected successfully!');
-            window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadSocialAccounts();
+            await window.cliq24App.loadUserPreferences();
+            await window.cliq24App.checkAndPromptForGoals('TikTok');
         }
     }, 1000);
     window.history.replaceState({}, document.title, window.location.pathname);

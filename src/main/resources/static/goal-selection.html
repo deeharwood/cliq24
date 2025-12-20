@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Your Goals - Cliq24</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .goal-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .goal-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .goal-header h1 {
+            font-size: 28px;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .goal-header .platform-name {
+            font-size: 20px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .goal-header p {
+            font-size: 15px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .goal-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .goal-option {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .goal-option:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+        }
+
+        .goal-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .goal-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+            margin-top: 2px;
+        }
+
+        .goal-content {
+            flex: 1;
+        }
+
+        .goal-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .goal-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .goal-description {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .progress-info {
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="goal-container">
+        <div class="goal-header">
+            <h1>🎯 What Matters Most to You?</h1>
+            <div class="platform-name" id="platformName">Facebook</div>
+            <p>Select one or more goals to personalize your dashboard metrics and insights.</p>
+        </div>
+
+        <div class="goal-options" id="goalOptions">
+            <!-- Goals will be populated here by JavaScript -->
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-secondary" id="skipBtn">Skip for Now</button>
+            <button class="btn btn-primary" id="saveBtn" disabled>Save Preferences</button>
+        </div>
+
+        <div class="progress-info" id="progressInfo"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:8080'
+            : 'https://cliq24.app';
+
+        let availableGoals = [];
+        let selectedGoals = [];
+        let currentPlatform = '';
+
+        // Get platform from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        currentPlatform = urlParams.get('platform') || 'facebook';
+
+        // Update platform name in header
+        document.getElementById('platformName').textContent =
+            currentPlatform.charAt(0).toUpperCase() + currentPlatform.slice(1);
+
+        // Load available goals from API
+        async function loadAvailableGoals() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/preferences/available-goals`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load goals');
+                }
+
+                const data = await response.json();
+                availableGoals = data.goals;
+                renderGoals();
+            } catch (error) {
+                console.error('Error loading goals:', error);
+                alert('Failed to load goal options. Please try again.');
+            }
+        }
+
+        // Render goal options
+        function renderGoals() {
+            const container = document.getElementById('goalOptions');
+            container.innerHTML = availableGoals.map(goal => `
+                <div class="goal-option" data-goal-id="${goal.id}">
+                    <input type="checkbox" id="goal-${goal.id}" value="${goal.id}">
+                    <div class="goal-content">
+                        <div class="goal-icon">${goal.icon}</div>
+                        <div class="goal-label">${goal.label}</div>
+                        <div class="goal-description">${goal.description}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add click handlers
+            document.querySelectorAll('.goal-option').forEach(option => {
+                const checkbox = option.querySelector('input[type="checkbox"]');
+                const goalId = option.dataset.goalId;
+
+                option.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        checkbox.checked = !checkbox.checked;
+                    }
+                    updateSelection();
+                });
+
+                checkbox.addEventListener('change', updateSelection);
+            });
+        }
+
+        // Update selection state
+        function updateSelection() {
+            selectedGoals = [];
+            document.querySelectorAll('.goal-option input:checked').forEach(input => {
+                selectedGoals.push(input.value);
+                input.closest('.goal-option').classList.add('selected');
+            });
+
+            document.querySelectorAll('.goal-option input:not(:checked)').forEach(input => {
+                input.closest('.goal-option').classList.remove('selected');
+            });
+
+            // Enable/disable save button
+            document.getElementById('saveBtn').disabled = selectedGoals.length === 0;
+        }
+
+        // Save preferences
+        async function savePreferences() {
+            if (selectedGoals.length === 0) {
+                alert('Please select at least one goal');
+                return;
+            }
+
+            try {
+                document.getElementById('saveBtn').disabled = true;
+                document.getElementById('progressInfo').textContent = 'Saving preferences...';
+
+                const response = await fetch(`${API_BASE_URL}/api/preferences/${currentPlatform}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ goals: selectedGoals })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save preferences');
+                }
+
+                document.getElementById('progressInfo').textContent = '✓ Preferences saved!';
+
+                // Redirect back to main app
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+
+            } catch (error) {
+                console.error('Error saving preferences:', error);
+                alert('Failed to save preferences. Please try again.');
+                document.getElementById('saveBtn').disabled = false;
+                document.getElementById('progressInfo').textContent = '';
+            }
+        }
+
+        // Skip preferences (set to comprehensive view)
+        async function skipPreferences() {
+            try {
+                document.getElementById('skipBtn').disabled = true;
+                document.getElementById('progressInfo').textContent = 'Setting default view...';
+
+                // Set comprehensive view as default
+                const response = await fetch(`${API_BASE_URL}/api/preferences/${currentPlatform}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ goals: ['comprehensive'] })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to set default preferences');
+                }
+
+                // Redirect back to main app
+                window.location.href = '/';
+
+            } catch (error) {
+                console.error('Error setting default preferences:', error);
+                alert('Failed to set default preferences. Please try again.');
+                document.getElementById('skipBtn').disabled = false;
+                document.getElementById('progressInfo').textContent = '';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('saveBtn').addEventListener('click', savePreferences);
+        document.getElementById('skipBtn').addEventListener('click', skipPreferences);
+
+        // Initialize
+        loadAvailableGoals();
+    </script>
+</body>
+</html>

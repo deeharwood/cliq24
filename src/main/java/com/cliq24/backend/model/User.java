@@ -3,6 +3,9 @@ package com.cliq24.backend.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Document(collection = "users")
 public class User {
@@ -22,6 +25,13 @@ public class User {
     private String stripeCustomerId;
     private String stripeSubscriptionId;
     private LocalDateTime subscriptionEndsAt;
+
+    // User preferences for personalized dashboard
+    // Map of platform -> list of goals (e.g., "facebook" -> ["growth", "engagement"])
+    private Map<String, List<String>> platformGoals = new HashMap<>();
+
+    // Additional platform-specific settings (for future use)
+    private Map<String, Object> platformPreferences = new HashMap<>();
 
     public User() {
     }
@@ -120,6 +130,22 @@ public class User {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public Map<String, List<String>> getPlatformGoals() {
+        return platformGoals;
+    }
+
+    public void setPlatformGoals(Map<String, List<String>> platformGoals) {
+        this.platformGoals = platformGoals;
+    }
+
+    public Map<String, Object> getPlatformPreferences() {
+        return platformPreferences;
+    }
+
+    public void setPlatformPreferences(Map<String, Object> platformPreferences) {
+        this.platformPreferences = platformPreferences;
     }
 }
 
