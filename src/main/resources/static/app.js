@@ -987,8 +987,8 @@ class Cliq24Dashboard {
                 </div>
             </div>
             <div class="pod-actions">
-                ${account.platform?.toLowerCase() === 'facebook' ? `
-                <button class="pod-action-btn manage" data-id="${account.id}">
+                ${['facebook', 'linkedin'].includes(account.platform?.toLowerCase()) ? `
+                <button class="pod-action-btn manage" data-id="${account.id}" data-platform="${account.platform?.toLowerCase()}">
                     <span>📊</span>
                     <span>Manage</span>
                 </button>
@@ -1009,11 +1009,15 @@ class Cliq24Dashboard {
         const syncBtn = pod.querySelector('.pod-action-btn.sync');
         const disconnectBtn = pod.querySelector('.pod-action-btn.disconnect');
 
-        // Manage button (Facebook only)
+        // Manage button (Facebook and LinkedIn)
         if (manageBtn) {
             manageBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                window.location.href = `/facebook-dashboard.html?id=${account.id}`;
+                const platform = account.platform?.toLowerCase();
+                const dashboardUrl = platform === 'linkedin'
+                    ? `/linkedin-dashboard.html?id=${account.id}`
+                    : `/facebook-dashboard.html?id=${account.id}`;
+                window.location.href = dashboardUrl;
             });
         }
 

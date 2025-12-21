@@ -3,6 +3,8 @@ package com.cliq24.backend.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Document(collection = "social_accounts")
 public class SocialAccount {
@@ -21,6 +23,10 @@ public class SocialAccount {
     private AccountMetrics metrics;
     private LocalDateTime lastSynced;
     private LocalDateTime connectedAt = LocalDateTime.now();
+
+    // LinkedIn-specific fields
+    private String accountType; // "personal" or "company" (for LinkedIn)
+    private Map<String, Integer> manualMetrics = new HashMap<>(); // User-provided metrics for personal accounts
 
     public SocialAccount() {
     }
@@ -119,6 +125,22 @@ public class SocialAccount {
 
     public void setConnectedAt(LocalDateTime connectedAt) {
         this.connectedAt = connectedAt;
+    }
+
+    public String getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(String accountType) {
+        this.accountType = accountType;
+    }
+
+    public Map<String, Integer> getManualMetrics() {
+        return manualMetrics;
+    }
+
+    public void setManualMetrics(Map<String, Integer> manualMetrics) {
+        this.manualMetrics = manualMetrics;
     }
 }
 
