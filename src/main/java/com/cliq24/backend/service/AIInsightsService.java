@@ -124,7 +124,7 @@ public class AIInsightsService {
         try {
             // Build request body
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "claude-3-5-sonnet-20241022");
+            requestBody.put("model", "claude-3-5-sonnet-20240620");
             requestBody.put("max_tokens", 150);
 
             Map<String, String> message = new HashMap<>();
