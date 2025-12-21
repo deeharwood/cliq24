@@ -146,18 +146,22 @@ class LinkedInDashboard {
 
     async loadPosts() {
         try {
-            console.log(`Loading posts for LinkedIn company account: ${this.accountId}`);
+            console.log(`[POSTS] Loading posts for LinkedIn company account: ${this.accountId}`);
             const posts = await this.apiCall(`/api/linkedin/${this.accountId}/posts?limit=10`);
+
+            console.log(`[POSTS] API returned ${posts ? posts.length : 0} posts:`, posts);
 
             if (posts && posts.length > 0) {
                 this.posts = posts;
+                console.log('[POSTS] Rendering posts with engagement metrics');
                 this.renderPosts(posts);
             } else {
+                console.log('[POSTS] No posts found, rendering empty state');
                 this.renderEmptyPosts();
             }
         } catch (error) {
-            console.error('Failed to load posts:', error);
-            this.renderEmptyPosts('Failed to load posts');
+            console.error('[POSTS] Failed to load posts:', error);
+            this.renderEmptyPosts('Failed to load posts: ' + error.message);
         }
     }
 
@@ -311,10 +315,16 @@ class LinkedInDashboard {
     populateManualMetricsForm(account) {
         const manualMetrics = account.manualMetrics || {};
 
-        document.getElementById('connectionsInput').value = manualMetrics.connections || '';
-        document.getElementById('postsInput').value = manualMetrics.posts || '';
-        document.getElementById('pendingInput').value = manualMetrics.pendingResponses || '';
-        document.getElementById('messagesInput').value = manualMetrics.newMessages || '';
+        // Only populate if the form elements exist (they're hidden for company pages)
+        const connectionsInput = document.getElementById('connectionsInput');
+        const postsInput = document.getElementById('postsInput');
+        const pendingInput = document.getElementById('pendingInput');
+        const messagesInput = document.getElementById('messagesInput');
+
+        if (connectionsInput) connectionsInput.value = manualMetrics.connections || '';
+        if (postsInput) postsInput.value = manualMetrics.posts || '';
+        if (pendingInput) pendingInput.value = manualMetrics.pendingResponses || '';
+        if (messagesInput) messagesInput.value = manualMetrics.newMessages || '';
     }
 
     renderPosts(posts) {
