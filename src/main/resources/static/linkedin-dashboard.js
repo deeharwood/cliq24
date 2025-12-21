@@ -329,6 +329,36 @@ class LinkedInDashboard {
             <div class="post-card">
                 <div class="post-message">${this.escapeHtml(post.text || post.message || 'No content')}</div>
                 <div class="post-time">${this.formatTimeAgo(post.createdAt || post.created_time)}</div>
+
+                ${post.impressionCount !== undefined ? `
+                    <div class="post-metrics">
+                        <div class="post-metric">
+                            <span class="metric-icon">👁️</span>
+                            <span class="metric-value">${this.formatNumber(post.impressionCount || 0)}</span>
+                            <span class="metric-label">Impressions</span>
+                        </div>
+                        <div class="post-metric">
+                            <span class="metric-icon">👍</span>
+                            <span class="metric-value">${this.formatNumber(post.likeCount || 0)}</span>
+                            <span class="metric-label">Likes</span>
+                        </div>
+                        <div class="post-metric">
+                            <span class="metric-icon">💬</span>
+                            <span class="metric-value">${this.formatNumber(post.commentCount || 0)}</span>
+                            <span class="metric-label">Comments</span>
+                        </div>
+                        <div class="post-metric">
+                            <span class="metric-icon">🔄</span>
+                            <span class="metric-value">${this.formatNumber(post.shareCount || 0)}</span>
+                            <span class="metric-label">Shares</span>
+                        </div>
+                        <div class="post-metric highlight">
+                            <span class="metric-icon">📈</span>
+                            <span class="metric-value">${post.engagementRate || 0}%</span>
+                            <span class="metric-label">Engagement</span>
+                        </div>
+                    </div>
+                ` : ''}
             </div>
         `).join('');
     }

@@ -199,6 +199,52 @@
         .post-time {
             font-size: 0.85rem;
             color: var(--text-tertiary);
+            margin-bottom: 1rem;
+        }
+
+        .post-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.75rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .post-metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .post-metric:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .post-metric.highlight {
+            background: rgba(10, 102, 194, 0.1);
+            border: 1px solid rgba(10, 102, 194, 0.3);
+        }
+
+        .metric-icon {
+            font-size: 1.2rem;
+        }
+
+        .metric-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .manual-metrics-form {

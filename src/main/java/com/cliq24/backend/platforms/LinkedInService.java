@@ -446,10 +446,10 @@ public class LinkedInService {
     }
 
     /**
-     * Get posts for company pages
+     * Get posts for company pages with engagement statistics
      */
     public List<Map<String, Object>> getPosts(String userId, String accountId, int limit) {
-        logger.debug("Getting posts for LinkedIn account: {}", accountId);
+        logger.info("Getting posts for LinkedIn account: {}", accountId);
 
         SocialAccount account = socialAccountRepository.findById(accountId)
             .orElseThrow(() -> new RuntimeException("Account not found"));
@@ -458,14 +458,187 @@ public class LinkedInService {
             throw new RuntimeException("Unauthorized");
         }
 
-        if (!"company".equals(account.getAccountType())) {
+        if (!"company".equalsIgnoreCase(account.getAccountType())) {
             // Personal accounts can't fetch posts via API
-            return getMockPosts();
+            logger.info("Personal account detected - returning empty posts list");
+            return new ArrayList<>();
         }
 
-        // TODO: Implement company page posts fetching
-        // Requires r_organization_social scope
-        return getMockPosts();
+        String accessToken = account.getAccessToken();
+        String organizationId = account.getPlatformUserId();
+
+        if (accessToken == null || organizationId == null) {
+            logger.warn("Missing access token or organization ID");
+            return new ArrayList<>();
+        }
+
+        try {
+            // Fetch UGC posts from LinkedIn
+            List<Map<String, Object>> posts = fetchUGCPosts(organizationId, accessToken, limit);
+
+            // Enrich each post with statistics
+            for (Map<String, Object> post : posts) {
+                String shareUrn = (String) post.get("shareUrn");
+                if (shareUrn != null) {
+                    Map<String, Object> stats = getShareStatistics(shareUrn, accessToken);
+                    post.putAll(stats); // Add engagement metrics to post
+                }
+            }
+
+            logger.info("Successfully fetched {} posts with statistics", posts.size());
+            return posts;
+
+        } catch (Exception e) {
+            logger.error("Failed to fetch LinkedIn posts: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Fetch UGC posts from LinkedIn API
+     */
+    private List<Map<String, Object>> fetchUGCPosts(String organizationId, String accessToken, int limit) {
+        List<Map<String, Object>> posts = new ArrayList<>();
+
+        try {
+            String organizationUrn = "urn:li:organization:" + organizationId;
+            String apiUrl = String.format(
+                "https://api.linkedin.com/v2/ugcPosts?q=authors&authors=List(%s)&count=%d&sortBy=LAST_MODIFIED",
+                URLEncoder.encode(organizationUrn, StandardCharsets.UTF_8),
+                limit
+            );
+
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+            headers.set("X-Restli-Protocol-Version", "2.0.0");
+            headers.set("LinkedIn-Version", "202301");
+
+            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
+
+            logger.info("Fetching UGC posts from: {}", apiUrl);
+
+            Map response = restTemplate.exchange(
+                apiUrl,
+                org.springframework.http.HttpMethod.GET,
+                entity,
+                Map.class
+            ).getBody();
+
+            logger.info("UGC Posts API response received");
+
+            if (response != null && response.containsKey("elements")) {
+                List<Map<String, Object>> elements = (List<Map<String, Object>>) response.get("elements");
+
+                for (Map<String, Object> element : elements) {
+                    Map<String, Object> post = new HashMap<>();
+
+                    // Extract post ID/URN
+                    String id = (String) element.get("id");
+                    post.put("id", id);
+                    post.put("shareUrn", id); // Use for fetching statistics
+
+                    // Extract post text
+                    if (element.containsKey("specificContent")) {
+                        Map<String, Object> specificContent = (Map<String, Object>) element.get("specificContent");
+                        if (specificContent.containsKey("com.linkedin.ugc.ShareContent")) {
+                            Map<String, Object> shareContent = (Map<String, Object>) specificContent.get("com.linkedin.ugc.ShareContent");
+                            if (shareContent.containsKey("shareCommentary")) {
+                                Map<String, Object> commentary = (Map<String, Object>) shareContent.get("shareCommentary");
+                                post.put("text", commentary.get("text"));
+                            }
+                        }
+                    }
+
+                    // Extract created timestamp
+                    if (element.containsKey("created")) {
+                        Map<String, Object> created = (Map<String, Object>) element.get("created");
+                        Long time = ((Number) created.get("time")).longValue();
+                        post.put("createdAt", java.time.Instant.ofEpochMilli(time).toString());
+                    }
+
+                    // Extract author
+                    post.put("author", element.get("author"));
+
+                    posts.add(post);
+                }
+
+                logger.info("Parsed {} UGC posts", posts.size());
+            }
+
+        } catch (Exception e) {
+            logger.error("Error fetching UGC posts: {}", e.getMessage(), e);
+            throw e;
+        }
+
+        return posts;
+    }
+
+    /**
+     * Get statistics for a specific share/post
+     */
+    private Map<String, Object> getShareStatistics(String shareUrn, String accessToken) {
+        Map<String, Object> stats = new HashMap<>();
+
+        try {
+            String apiUrl = String.format(
+                "https://api.linkedin.com/v2/organizationalEntityShareStatistics?q=organizationalEntity&shares=List(%s)",
+                URLEncoder.encode(shareUrn, StandardCharsets.UTF_8)
+            );
+
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+            headers.set("X-Restli-Protocol-Version", "2.0.0");
+
+            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
+
+            logger.debug("Fetching share statistics for: {}", shareUrn);
+
+            Map response = restTemplate.exchange(
+                apiUrl,
+                org.springframework.http.HttpMethod.GET,
+                entity,
+                Map.class
+            ).getBody();
+
+            if (response != null && response.containsKey("elements")) {
+                List<Map<String, Object>> elements = (List<Map<String, Object>>) response.get("elements");
+
+                if (!elements.isEmpty()) {
+                    Map<String, Object> shareStats = elements.get(0);
+
+                    // Extract total share statistics
+                    if (shareStats.containsKey("totalShareStatistics")) {
+                        Map<String, Object> totalStats = (Map<String, Object>) shareStats.get("totalShareStatistics");
+
+                        stats.put("impressionCount", totalStats.getOrDefault("impressionCount", 0));
+                        stats.put("likeCount", totalStats.getOrDefault("likeCount", 0));
+                        stats.put("commentCount", totalStats.getOrDefault("commentCount", 0));
+                        stats.put("shareCount", totalStats.getOrDefault("shareCount", 0));
+                        stats.put("clickCount", totalStats.getOrDefault("clickCount", 0));
+                        stats.put("engagement", totalStats.getOrDefault("engagement", 0));
+
+                        // Calculate engagement rate
+                        int impressions = ((Number) totalStats.getOrDefault("impressionCount", 0)).intValue();
+                        int engagementTotal = ((Number) totalStats.getOrDefault("engagement", 0)).intValue();
+
+                        if (impressions > 0) {
+                            double engagementRate = (engagementTotal * 100.0) / impressions;
+                            stats.put("engagementRate", Math.round(engagementRate * 100.0) / 100.0);
+                        } else {
+                            stats.put("engagementRate", 0.0);
+                        }
+                    }
+
+                    logger.debug("Share statistics: {}", stats);
+                }
+            }
+
+        } catch (Exception e) {
+            logger.error("Error fetching share statistics: {}", e.getMessage(), e);
+            // Return empty stats on error - don't fail the whole request
+        }
+
+        return stats;
     }
 
     /**
