@@ -157,6 +157,22 @@ public class AuthService {
         logger.info("Profile picture updated for user: {}", user.getEmail());
     }
 
+    public UserDTO updateUserType(String userId, String userType) {
+        logger.debug("Updating user type for user: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    logger.error("User not found: {}", userId);
+                    return new RuntimeException("User not found");
+                });
+
+        user.setUserType(userType);
+        User updatedUser = userRepository.save(user);
+
+        logger.info("User type updated to {} for user: {}", userType, user.getEmail());
+        return userMapper.toDTO(updatedUser);
+    }
+
     public LoginResponseDTO registerWithEmail(RegisterRequestDTO request) {
         logger.info("Registering new user with email: {}", request.getEmail());
 

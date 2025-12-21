@@ -19,6 +19,9 @@ public class User {
     private String passwordHash; // For email/password authentication
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // User type field
+    private String userType = "END_USER"; // COMPANY, END_USER (determines which platforms are available)
+
     // Subscription fields
     private String subscriptionTier = "FREE"; // FREE, PREMIUM
     private String subscriptionStatus = "ACTIVE"; // ACTIVE, CANCELED, PAST_DUE, INCOMPLETE
@@ -122,6 +125,14 @@ public class User {
 
     public void setSubscriptionEndsAt(LocalDateTime subscriptionEndsAt) {
         this.subscriptionEndsAt = subscriptionEndsAt;
+    }
+
+    public String getUserType() {
+        return userType;
+    }
+
+    public void setUserType(String userType) {
+        this.userType = userType;
     }
 
     public String getPasswordHash() {

@@ -12,13 +12,14 @@ public class UserDTO {
     private LocalDateTime createdAt;
     private Integer connectedAccountsCount;
     private Integer overallScore;
+    private String userType; // COMPANY or END_USER
 
     public UserDTO() {
     }
 
     public UserDTO(String id, String googleId, String email, String name, String picture,
                    String token, LocalDateTime createdAt, Integer connectedAccountsCount,
-                   Integer overallScore) {
+                   Integer overallScore, String userType) {
         this.id = id;
         this.googleId = googleId;
         this.email = email;
@@ -28,6 +29,7 @@ public class UserDTO {
         this.createdAt = createdAt;
         this.connectedAccountsCount = connectedAccountsCount;
         this.overallScore = overallScore;
+        this.userType = userType;
     }
 
     public static UserDTOBuilder builder() {
@@ -106,6 +108,14 @@ public class UserDTO {
         this.overallScore = overallScore;
     }
 
+    public String getUserType() {
+        return userType;
+    }
+
+    public void setUserType(String userType) {
+        this.userType = userType;
+    }
+
     public static class UserDTOBuilder {
         private String id;
         private String googleId;
@@ -116,6 +126,7 @@ public class UserDTO {
         private LocalDateTime createdAt;
         private Integer connectedAccountsCount;
         private Integer overallScore;
+        private String userType;
 
         UserDTOBuilder() {
         }
@@ -165,9 +176,14 @@ public class UserDTO {
             return this;
         }
 
+        public UserDTOBuilder userType(String userType) {
+            this.userType = userType;
+            return this;
+        }
+
         public UserDTO build() {
             return new UserDTO(id, googleId, email, name, picture, token, createdAt,
-                             connectedAccountsCount, overallScore);
+                             connectedAccountsCount, overallScore, userType);
         }
     }
 }

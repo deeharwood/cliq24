@@ -157,6 +157,21 @@ class Cliq24Dashboard {
         if (user) {
             this.currentUser = user;
             this.updateUserUI(user);
+
+            // Filter platforms based on user type
+            // END_USER: Hide LinkedIn (no useful API data for personal profiles)
+            // COMPANY: Show all platforms including LinkedIn (for company pages)
+            if (user.userType === 'END_USER') {
+                this.allPlatforms = this.allPlatforms.filter(p => p !== 'LinkedIn');
+                console.log('[USER TYPE] END_USER detected - LinkedIn hidden');
+            } else {
+                // Restore all platforms for COMPANY users
+                if (!this.allPlatforms.includes('LinkedIn')) {
+                    this.allPlatforms = ['Facebook', 'Instagram', 'Twitter', 'LinkedIn', 'TikTok', 'YouTube', 'Snapchat'];
+                }
+                console.log('[USER TYPE] COMPANY user - All platforms available');
+            }
+
             await this.loadSubscriptionStatus();
         }
     }
@@ -228,8 +243,17 @@ class Cliq24Dashboard {
             console.log('Social accounts loaded:', accounts);
 
             if (accounts) {
-                this.socialAccounts = accounts;
-                console.log(`[DEBUG] Rendering ${accounts.length} social accounts`);
+                // Filter out LinkedIn accounts for END_USER type
+                if (this.currentUser && this.currentUser.userType === 'END_USER') {
+                    this.socialAccounts = accounts.filter(account =>
+                        account.platform?.toLowerCase() !== 'linkedin'
+                    );
+                    console.log('[USER TYPE] Filtered out LinkedIn accounts for END_USER');
+                } else {
+                    this.socialAccounts = accounts;
+                }
+
+                console.log(`[DEBUG] Rendering ${this.socialAccounts.length} social accounts`);
                 this.renderSocialPods();
                 this.updateOverallScore();
             } else {

@@ -11,7 +11,7 @@ public class UserMapper {
         if (user == null) {
             return null;
         }
-        
+
         return UserDTO.builder()
                 .id(user.getId())
                 .googleId(user.getGoogleId())
@@ -19,6 +19,7 @@ public class UserMapper {
                 .name(user.getName())
                 .picture(user.getPicture())
                 .createdAt(user.getCreatedAt())
+                .userType(user.getUserType())
                 .build();
     }
     

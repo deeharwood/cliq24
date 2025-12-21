@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Account Type - Cliq24</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .user-type-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .user-type-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .user-type-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-type-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+        }
+
+        .user-type-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .user-type-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 2rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .user-type-option:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--ambient-blue);
+            transform: translateY(-4px);
+        }
+
+        .user-type-option.selected {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--ambient-blue);
+            box-shadow: 0 8px 24px rgba(0, 212, 255, 0.2);
+        }
+
+        .user-type-option-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-type-option-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .user-type-option-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, var(--ambient-blue), var(--ambient-teal));
+            border: none;
+            border-radius: 0.75rem;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .continue-btn.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .continue-btn.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+        }
+
+        .skip-link {
+            display: block;
+            margin-top: 1rem;
+            color: var(--text-tertiary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .skip-link:hover {
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .user-type-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Ambient Background Effects -->
+    <div class="ambient-bg">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+
+    <div class="user-type-container">
+        <div class="user-type-card">
+            <h1 class="user-type-title">Welcome to Cliq24!</h1>
+            <p class="user-type-subtitle">Tell us about yourself so we can personalize your experience</p>
+
+            <div class="user-type-options">
+                <div class="user-type-option" data-type="COMPANY">
+                    <div class="user-type-option-icon">🏢</div>
+                    <div class="user-type-option-title">Company</div>
+                    <div class="user-type-option-description">
+                        I'm managing social media for a business or organization
+                    </div>
+                </div>
+
+                <div class="user-type-option" data-type="END_USER">
+                    <div class="user-type-option-icon">👤</div>
+                    <div class="user-type-option-title">Individual</div>
+                    <div class="user-type-option-description">
+                        I'm tracking my personal social media accounts
+                    </div>
+                </div>
+            </div>
+
+            <button class="continue-btn" id="continueBtn">Continue</button>
+            <a href="/index.html" class="skip-link">Skip for now</a>
+        </div>
+    </div>
+
+    <script>
+        let selectedType = null;
+
+        // Handle option selection
+        document.querySelectorAll('.user-type-option').forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove selected class from all options
+                document.querySelectorAll('.user-type-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+
+                // Add selected class to clicked option
+                option.classList.add('selected');
+                selectedType = option.dataset.type;
+
+                // Enable continue button
+                document.getElementById('continueBtn').classList.add('active');
+            });
+        });
+
+        // Handle continue button
+        document.getElementById('continueBtn').addEventListener('click', async () => {
+            if (!selectedType) return;
+
+            const continueBtn = document.getElementById('continueBtn');
+            const originalText = continueBtn.textContent;
+            continueBtn.textContent = 'Saving...';
+            continueBtn.disabled = true;
+
+            try {
+                const response = await fetch('/auth/me/user-type', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // Include cookies for authentication
+                    body: JSON.stringify({ userType: selectedType })
+                });
+
+                if (response.ok) {
+                    // Redirect to dashboard
+                    window.location.href = '/index.html';
+                } else {
+                    throw new Error('Failed to update user type');
+                }
+            } catch (error) {
+                console.error('Error updating user type:', error);
+                alert('Failed to save your selection. Please try again.');
+                continueBtn.textContent = originalText;
+                continueBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

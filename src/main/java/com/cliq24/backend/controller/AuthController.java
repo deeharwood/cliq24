@@ -81,6 +81,35 @@ public class AuthController {
     }
 
     /**
+     * Update user type (COMPANY or END_USER)
+     * Usage: PUT /auth/me/user-type (authenticated via cookie or Authorization header)
+     * Body: { "userType": "COMPANY" } or { "userType": "END_USER" }
+     */
+    @PutMapping("/me/user-type")
+    public ResponseEntity<UserDTO> updateUserType(@RequestBody java.util.Map<String, String> body) {
+        // Get userId from SecurityContext
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String userId = auth.getName();
+        String userType = body.get("userType");
+
+        // Validate userType
+        if (!"COMPANY".equals(userType) && !"END_USER".equals(userType)) {
+            logger.warn("Invalid userType provided: {}", userType);
+            return ResponseEntity.badRequest().build();
+        }
+
+        UserDTO updatedUser = authService.updateUserType(userId, userType);
+        logger.info("User type updated to {} for user: {}", userType, userId);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
      * Upload user profile picture file
      * Usage: POST /auth/me/picture/upload (authenticated via cookie or Authorization header)
      * Form Data: file (multipart/form-data)
