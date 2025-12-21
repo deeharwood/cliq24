@@ -391,113 +391,46 @@
                 </div>
             </div>
 
-            <!-- Metrics Grid -->
-            <div class="metrics-grid">
+            <!-- Metrics Grid - Hidden for LinkedIn due to API limitations -->
+            <div class="metrics-grid" style="display: none;">
                 <div class="metric-card">
                     <div class="metric-label">Engagement Score</div>
-                    <div class="metric-value" id="engagementScore">--</div>
-                    <div class="metric-change positive" id="engagementChange">
-                        <span>↑</span>
-                        <span>--</span>
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label" id="connectionsLabel">Connections</div>
-                    <div class="metric-value" id="connectionsCount">--</div>
-                    <div class="metric-change positive" id="connectionsChange">
-                        <span>↑</span>
-                        <span>--</span>
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Total Posts</div>
-                    <div class="metric-value" id="postsCount">--</div>
-                    <div class="metric-change positive" id="postsChange">
-                        <span>↑</span>
-                        <span>--</span>
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Pending Responses</div>
-                    <div class="metric-value" id="pendingCount">--</div>
-                    <div class="metric-change" id="pendingChange">
-                        <span>--</span>
+                    <div class="metric-value" id="engagementScore">N/A</div>
+                    <div class="metric-change">
+                        <span>Not available via API</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Manual Metrics Section (Personal Accounts Only) -->
-            <div class="content-section" id="manualMetricsSection" style="display: none;">
-                <h2 class="section-title">Update Your Metrics</h2>
+            <!-- API Limitation Notice -->
+            <div class="content-section">
+                <h2 class="section-title">LinkedIn Profile Connected</h2>
 
                 <div class="info-message">
                     <div class="info-icon">ℹ️</div>
                     <div>
-                        <strong>Personal Account Metrics:</strong> LinkedIn's API doesn't provide metrics for personal profiles.
-                        Please manually enter your current stats from your LinkedIn profile to track your growth.
+                        <strong>LinkedIn API Limitations:</strong> LinkedIn restricts access to connection counts, engagement metrics, and analytics for personal profiles.
+                        We can verify your profile is connected, but detailed analytics are only available for platforms like Facebook, Twitter, Instagram, and TikTok.
+                        <br><br>
+                        <strong>What we can show:</strong> Your name, profile picture, and headline from LinkedIn.
+                        <br>
+                        <strong>What's not available:</strong> Connection count, post analytics, and engagement metrics (restricted by LinkedIn since 2015).
                     </div>
                 </div>
 
-                <div id="updateMessage"></div>
-
-                <form id="manualMetricsForm">
-                    <div class="manual-metrics-form">
-                        <div class="form-group">
-                            <label for="connectionsInput" class="form-label">Connections</label>
-                            <input
-                                type="number"
-                                id="connectionsInput"
-                                class="form-input"
-                                placeholder="e.g., 500"
-                                min="0"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="postsInput" class="form-label">Posts (last 30 days)</label>
-                            <input
-                                type="number"
-                                id="postsInput"
-                                class="form-input"
-                                placeholder="e.g., 10"
-                                min="0"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="pendingInput" class="form-label">Pending Messages</label>
-                            <input
-                                type="number"
-                                id="pendingInput"
-                                class="form-input"
-                                placeholder="e.g., 5"
-                                min="0"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="messagesInput" class="form-label">New Messages</label>
-                            <input
-                                type="number"
-                                id="messagesInput"
-                                class="form-input"
-                                placeholder="e.g., 3"
-                                min="0"
-                            />
-                        </div>
+                <div class="info-message" style="background: rgba(0, 255, 204, 0.1); border-color: rgba(0, 255, 204, 0.3);">
+                    <div class="info-icon">✅</div>
+                    <div>
+                        <strong>Your LinkedIn is connected!</strong> While we can't show detailed metrics due to LinkedIn's API restrictions,
+                        your profile is verified and connected to Cliq24. Focus on tracking your engagement across other platforms where we provide full analytics.
                     </div>
-                    <button type="submit" class="update-btn" id="updateBtn">
-                        Update Metrics
-                    </button>
-                </form>
-            </div>
+                </div>
 
-            <!-- Posts Section (Company Accounts Only) -->
-            <div class="content-section" id="postsSection" style="display: none;">
-                <h2 class="section-title">Recent Posts</h2>
-                <div class="posts-grid" id="postsList">
-                    <!-- Posts will be dynamically loaded here -->
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📋</div>
-                        <div>Loading posts...</div>
-                    </div>
+                <div style="margin-top: 2rem; text-align: center;">
+                    <a href="https://www.linkedin.com/in/me" target="_blank" rel="noopener noreferrer" class="sync-btn">
+                        <span>🔗</span>
+                        <span>View Your LinkedIn Profile</span>
+                    </a>
                 </div>
             </div>
         </div>

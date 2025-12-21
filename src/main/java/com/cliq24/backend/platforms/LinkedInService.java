@@ -27,13 +27,21 @@ public class LinkedInService {
     }
 
     public AccountMetrics syncMetrics(SocialAccount account) {
-        String accountType = account.getAccountType();
+        logger.info("Syncing LinkedIn account: {}", account.getUsername());
 
-        if ("company".equals(accountType)) {
-            return syncCompanyMetrics(account);
-        } else {
-            return syncPersonalMetrics(account);
-        }
+        // LinkedIn API does not provide connection counts or engagement metrics for personal profiles
+        // We can only show profile information (name, email, headline)
+        // Return minimal metrics to indicate account is connected
+
+        AccountMetrics metrics = new AccountMetrics();
+        metrics.setEngagementScore(0);
+        metrics.setConnections(0);
+        metrics.setPosts(0);
+        metrics.setPendingResponses(0);
+        metrics.setNewMessages(0);
+
+        logger.info("LinkedIn metrics - API limitations prevent personal profile analytics");
+        return metrics;
     }
 
     /**
