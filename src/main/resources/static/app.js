@@ -732,8 +732,8 @@ class Cliq24Dashboard {
             try {
                 const pod = this.createSocialPod(account);
                 grid.appendChild(pod);
-                // Load insights after pod is in the DOM
-                this.loadInsights(account.id);
+                // Load insights after pod is in the DOM (with small delay to ensure rendering)
+                setTimeout(() => this.loadInsights(account.id), 100);
             } catch (error) {
                 console.error('Failed to create pod for account:', account, error);
             }
