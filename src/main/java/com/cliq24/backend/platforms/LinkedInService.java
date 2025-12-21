@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -27,12 +29,71 @@ public class LinkedInService {
     }
 
     public AccountMetrics syncMetrics(SocialAccount account) {
-        logger.info("Syncing LinkedIn account: {}", account.getUsername());
+        logger.info("Syncing LinkedIn account: {} (type: {})", account.getUsername(), account.getAccountType());
 
-        // LinkedIn API does not provide connection counts or engagement metrics for personal profiles
-        // We can only show profile information (name, email, headline)
-        // Return minimal metrics to indicate account is connected
+        String accountType = account.getAccountType();
 
+        if ("company".equalsIgnoreCase(accountType)) {
+            return syncCompanyPageMetrics(account);
+        } else {
+            return syncPersonalProfileMetrics(account);
+        }
+    }
+
+    /**
+     * Sync metrics for LinkedIn Company Pages (real API data)
+     */
+    private AccountMetrics syncCompanyPageMetrics(SocialAccount account) {
+        logger.info("Syncing LinkedIn Company Page: {}", account.getUsername());
+
+        String accessToken = account.getAccessToken();
+        String organizationId = account.getPlatformUserId();
+
+        if (accessToken == null || organizationId == null) {
+            logger.warn("Missing access token or organization ID for company page");
+            return getDefaultMetrics();
+        }
+
+        try {
+            // Fetch follower statistics from LinkedIn API
+            Map<String, Object> followerStats = getOrganizationFollowerStats(organizationId, accessToken);
+
+            AccountMetrics metrics = new AccountMetrics();
+
+            // Get follower count
+            int followerCount = (Integer) followerStats.getOrDefault("followerCount", 0);
+            metrics.setConnections(followerCount); // Use connections field for follower count
+
+            // Get follower gained (last 30 days if available)
+            int followersGained = (Integer) followerStats.getOrDefault("followersGained", 0);
+
+            // Calculate engagement score based on follower growth
+            int engagementScore = calculateCompanyEngagementScore(followerCount, followersGained);
+            metrics.setEngagementScore(engagementScore);
+
+            // Set other metrics to 0 for now (will add post analytics later)
+            metrics.setPosts(0);
+            metrics.setPendingResponses(0);
+            metrics.setNewMessages(0);
+
+            logger.info("Company Page metrics - Followers: {}, Growth: {}, Score: {}",
+                followerCount, followersGained, engagementScore);
+
+            return metrics;
+
+        } catch (Exception e) {
+            logger.error("Failed to sync company page metrics: {}", e.getMessage(), e);
+            return getDefaultMetrics();
+        }
+    }
+
+    /**
+     * Sync metrics for personal LinkedIn profiles (limited data)
+     */
+    private AccountMetrics syncPersonalProfileMetrics(SocialAccount account) {
+        logger.info("Syncing LinkedIn Personal Profile: {}", account.getUsername());
+
+        // Personal profiles have limited API access
         AccountMetrics metrics = new AccountMetrics();
         metrics.setEngagementScore(0);
         metrics.setConnections(0);
@@ -40,8 +101,114 @@ public class LinkedInService {
         metrics.setPendingResponses(0);
         metrics.setNewMessages(0);
 
-        logger.info("LinkedIn metrics - API limitations prevent personal profile analytics");
+        logger.info("Personal profile - API limitations prevent detailed analytics");
         return metrics;
+    }
+
+    /**
+     * Get organization follower statistics from LinkedIn API
+     */
+    private Map<String, Object> getOrganizationFollowerStats(String organizationId, String accessToken) {
+        Map<String, Object> stats = new HashMap<>();
+
+        try {
+            // LinkedIn Organization Follower Statistics API
+            // https://api.linkedin.com/v2/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=urn:li:organization:{id}
+
+            String organizationUrn = "urn:li:organization:" + organizationId;
+            String apiUrl = String.format(
+                "https://api.linkedin.com/v2/organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=%s",
+                URLEncoder.encode(organizationUrn, StandardCharsets.UTF_8)
+            );
+
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+            headers.set("X-Restli-Protocol-Version", "2.0.0");
+
+            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
+
+            logger.info("Fetching follower stats from: {}", apiUrl);
+
+            Map response = restTemplate.exchange(
+                apiUrl,
+                org.springframework.http.HttpMethod.GET,
+                entity,
+                Map.class
+            ).getBody();
+
+            logger.info("LinkedIn API response: {}", response);
+
+            if (response != null && response.containsKey("elements")) {
+                List<Map<String, Object>> elements = (List<Map<String, Object>>) response.get("elements");
+
+                if (!elements.isEmpty()) {
+                    Map<String, Object> firstElement = elements.get(0);
+
+                    // Extract follower count
+                    if (firstElement.containsKey("followerCounts")) {
+                        Map<String, Object> followerCounts = (Map<String, Object>) firstElement.get("followerCounts");
+                        if (followerCounts.containsKey("organicFollowerCount")) {
+                            stats.put("followerCount", followerCounts.get("organicFollowerCount"));
+                        }
+                    }
+
+                    // Extract followers gained (if time range data available)
+                    if (firstElement.containsKey("followerGains")) {
+                        Map<String, Object> followerGains = (Map<String, Object>) firstElement.get("followerGains");
+                        if (followerGains.containsKey("organicFollowerGain")) {
+                            stats.put("followersGained", followerGains.get("organicFollowerGain"));
+                        }
+                    }
+                }
+            }
+
+            logger.info("Extracted follower stats: {}", stats);
+
+        } catch (Exception e) {
+            logger.error("Error fetching organization follower stats: {}", e.getMessage(), e);
+            // Return empty stats on error
+        }
+
+        return stats;
+    }
+
+    /**
+     * Calculate engagement score for company pages based on followers and growth
+     */
+    private int calculateCompanyEngagementScore(int followerCount, int followersGained) {
+        int score = 0;
+
+        // Follower count (max 40 points)
+        if (followerCount > 10000) {
+            score += 40;
+        } else if (followerCount > 5000) {
+            score += 35;
+        } else if (followerCount > 1000) {
+            score += 30;
+        } else if (followerCount > 500) {
+            score += 20;
+        } else if (followerCount > 100) {
+            score += 10;
+        } else if (followerCount > 0) {
+            score += 5;
+        }
+
+        // Follower growth (max 60 points)
+        if (followersGained > 1000) {
+            score += 60;
+        } else if (followersGained > 500) {
+            score += 50;
+        } else if (followersGained > 100) {
+            score += 40;
+        } else if (followersGained > 50) {
+            score += 30;
+        } else if (followersGained > 10) {
+            score += 20;
+        } else if (followersGained > 0) {
+            score += 10;
+        }
+
+        return Math.min(100, score);
     }
 
     /**

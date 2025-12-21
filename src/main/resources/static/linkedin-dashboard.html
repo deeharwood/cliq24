@@ -391,13 +391,37 @@
                 </div>
             </div>
 
-            <!-- Metrics Grid - Hidden for LinkedIn due to API limitations -->
-            <div class="metrics-grid" style="display: none;">
+            <!-- Metrics Grid -->
+            <div class="metrics-grid" id="metricsGrid">
                 <div class="metric-card">
                     <div class="metric-label">Engagement Score</div>
-                    <div class="metric-value" id="engagementScore">N/A</div>
-                    <div class="metric-change">
-                        <span>Not available via API</span>
+                    <div class="metric-value" id="engagementScore">--</div>
+                    <div class="metric-change positive" id="engagementChange">
+                        <span>↑</span>
+                        <span>--</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label" id="followersLabel">Followers</div>
+                    <div class="metric-value" id="followersCount">--</div>
+                    <div class="metric-change positive" id="followersChange">
+                        <span>↑</span>
+                        <span>--</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Posts</div>
+                    <div class="metric-value" id="postsCount">--</div>
+                    <div class="metric-change positive" id="postsChange">
+                        <span>↑</span>
+                        <span>--</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Follower Growth</div>
+                    <div class="metric-value" id="growthCount">--</div>
+                    <div class="metric-change" id="growthChange">
+                        <span>Last 30 days</span>
                     </div>
                 </div>
             </div>

@@ -251,23 +251,39 @@ class LinkedInDashboard {
 
         // Update metrics
         const metrics = account.metrics || {};
+        const accountType = account.accountType || 'personal';
 
-        document.getElementById('engagementScore').textContent = metrics.engagementScore || '0';
-        document.getElementById('connectionsCount').textContent = this.formatNumber(metrics.connections || 0);
-        document.getElementById('postsCount').textContent = this.formatNumber(metrics.posts || 0);
-        document.getElementById('pendingCount').textContent = this.formatNumber(metrics.pendingResponses || 0);
+        if (accountType === 'company') {
+            // Show company page metrics
+            document.getElementById('engagementScore').textContent = metrics.engagementScore || '0';
+            document.getElementById('followersCount').textContent = this.formatNumber(metrics.connections || 0); // connections = followers for company
+            document.getElementById('postsCount').textContent = this.formatNumber(metrics.posts || 0);
+            document.getElementById('growthCount').textContent = this.formatNumber(metrics.followersGained || 0);
 
-        // Update connections label based on account type
-        const connectionsLabel = document.getElementById('connectionsLabel');
-        if (connectionsLabel) {
-            connectionsLabel.textContent = account.accountType === 'company' ? 'Followers' : 'Connections';
+            // Update metric changes
+            this.updateMetricChange('engagementChange', '+' + (metrics.engagementScore || 0) + ' pts');
+            this.updateMetricChange('followersChange', '+' + this.formatNumber(metrics.followersGained || 0));
+            this.updateMetricChange('postsChange', 'Last 30 days');
+            this.updateMetricChange('growthChange', 'Last 30 days');
+
+            // Update label
+            const followersLabel = document.getElementById('followersLabel');
+            if (followersLabel) {
+                followersLabel.textContent = 'Followers';
+            }
+        } else {
+            // Personal profile - show limited data message
+            document.getElementById('engagementScore').textContent = 'N/A';
+            document.getElementById('followersCount').textContent = 'N/A';
+            document.getElementById('postsCount').textContent = 'N/A';
+            document.getElementById('growthCount').textContent = 'N/A';
+
+            // Hide metrics grid for personal profiles
+            const metricsGrid = document.getElementById('metricsGrid');
+            if (metricsGrid) {
+                metricsGrid.style.display = 'none';
+            }
         }
-
-        // Update metric changes (placeholder - would come from API in real app)
-        this.updateMetricChange('engagementChange', '+5%');
-        this.updateMetricChange('connectionsChange', '+' + this.formatNumber(Math.floor((metrics.connections || 0) * 0.05)));
-        this.updateMetricChange('postsChange', '+' + Math.floor((metrics.posts || 0) * 0.1));
-        this.updateMetricChange('pendingChange', metrics.pendingResponses || 0);
     }
 
     updateMetricChange(elementId, value) {
