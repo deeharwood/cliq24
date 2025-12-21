@@ -45,6 +45,39 @@ public class LinkedInService {
         AccountMetrics metrics = new AccountMetrics();
         Map<String, Integer> manualMetrics = account.getManualMetrics();
 
+        // Try to fetch what we can from LinkedIn API
+        String accessToken = account.getAccessToken();
+        if (accessToken != null && !accessToken.isEmpty()) {
+            try {
+                logger.info("Attempting to fetch LinkedIn profile data from API...");
+                Map<String, Object> profileData = fetchPersonalProfileData(accessToken);
+
+                // Extract any available metrics from API
+                if (profileData.containsKey("numConnections")) {
+                    metrics.setConnections((Integer) profileData.get("numConnections"));
+                    logger.info("Fetched connection count from API: {}", metrics.getConnections());
+                }
+
+                // If we got data from API, use it and skip manual metrics
+                if (metrics.getConnections() > 0) {
+                    // Use API data, fill in rest with manual or zeros
+                    metrics.setPosts(manualMetrics != null ? manualMetrics.getOrDefault("posts", 0) : 0);
+                    metrics.setPendingResponses(manualMetrics != null ? manualMetrics.getOrDefault("pendingResponses", 0) : 0);
+                    metrics.setNewMessages(manualMetrics != null ? manualMetrics.getOrDefault("newMessages", 0) : 0);
+
+                    int engagementScore = calculateEngagementScore(metrics);
+                    metrics.setEngagementScore(engagementScore);
+
+                    logger.info("Using API data with manual supplements - Connections: {}, Posts: {}",
+                        metrics.getConnections(), metrics.getPosts());
+                    return metrics;
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to fetch LinkedIn API data, falling back to manual metrics: {}", e.getMessage());
+            }
+        }
+
+        // Fall back to manual metrics if API didn't provide data
         if (manualMetrics != null && !manualMetrics.isEmpty()) {
             // Use user-provided manual metrics
             metrics.setConnections(manualMetrics.getOrDefault("connections", 0));
@@ -68,6 +101,71 @@ public class LinkedInService {
             metrics.getConnections(), metrics.getPosts());
 
         return metrics;
+    }
+
+    /**
+     * Try to fetch personal profile data from LinkedIn API
+     * This attempts various endpoints to get connection count and other metrics
+     */
+    private Map<String, Object> fetchPersonalProfileData(String accessToken) {
+        Map<String, Object> data = new HashMap<>();
+
+        try {
+            // Try the /v2/me endpoint with extended projection
+            String apiUrl = "https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,headline,vanityName,profilePicture(displayImage~:playableStreams))";
+
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+
+            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
+
+            Map response = restTemplate.exchange(
+                apiUrl,
+                org.springframework.http.HttpMethod.GET,
+                entity,
+                Map.class
+            ).getBody();
+
+            logger.info("LinkedIn API response: {}", response);
+
+            // Check if response contains connection count (some scopes may provide this)
+            if (response != null && response.containsKey("numConnections")) {
+                data.put("numConnections", response.get("numConnections"));
+            }
+
+            // Try alternative endpoint for connection count
+            try {
+                String connectionsUrl = "https://api.linkedin.com/v2/connections?q=viewer&count=0";
+                headers = new org.springframework.http.HttpHeaders();
+                headers.set("Authorization", "Bearer " + accessToken);
+                entity = new org.springframework.http.HttpEntity<>(headers);
+
+                Map connectionsResponse = restTemplate.exchange(
+                    connectionsUrl,
+                    org.springframework.http.HttpMethod.GET,
+                    entity,
+                    Map.class
+                ).getBody();
+
+                logger.info("LinkedIn connections API response: {}", connectionsResponse);
+
+                if (connectionsResponse != null && connectionsResponse.containsKey("paging")) {
+                    Map paging = (Map) connectionsResponse.get("paging");
+                    if (paging.containsKey("total")) {
+                        data.put("numConnections", paging.get("total"));
+                        logger.info("Found connection count in paging.total: {}", paging.get("total"));
+                    }
+                }
+            } catch (Exception e) {
+                logger.debug("Connections endpoint not available: {}", e.getMessage());
+            }
+
+        } catch (Exception e) {
+            logger.error("Error fetching LinkedIn profile data: {}", e.getMessage());
+            throw e;
+        }
+
+        return data;
     }
 
     /**
