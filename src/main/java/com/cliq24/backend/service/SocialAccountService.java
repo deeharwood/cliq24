@@ -542,7 +542,31 @@ public class SocialAccountService {
     public SocialAccountDTO connectLinkedInAccount(String authHeader, String code) {
         logger.info("Connecting LinkedIn account with OAuth code");
 
-        String userId = authService.validateAndExtractUserId(authHeader);
+        // Extract userId - handle both JWT token and raw userId from cookie auth
+        String userId;
+
+        // Remove "Bearer " prefix if present
+        String tokenPart = authHeader != null && authHeader.startsWith("Bearer ")
+            ? authHeader.substring(7)
+            : authHeader;
+
+        // Check if it's a JWT (contains at least 2 dots)
+        boolean isJWT = tokenPart != null && tokenPart.split("\\.").length == 3;
+
+        if (isJWT) {
+            // It's a JWT token - validate and extract userId
+            logger.info("Detected JWT token, validating...");
+            try {
+                userId = authService.validateAndExtractUserId(authHeader);
+            } catch (Exception e) {
+                logger.error("JWT validation failed: {}", e.getMessage());
+                throw new RuntimeException("Invalid or expired token");
+            }
+        } else {
+            // It's a raw userId from cookie auth
+            logger.info("Detected raw userId from cookie auth: {}", tokenPart);
+            userId = tokenPart;
+        }
 
         try {
             // Exchange code for access token
