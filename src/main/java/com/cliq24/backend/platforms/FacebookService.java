@@ -45,24 +45,38 @@ public class FacebookService {
         try {
             String pageId = account.getPlatformUserId();
 
-            // Fetch Page info including follower count
+            // Fetch Page info including follower count - try multiple field variations
             String pageInfoUrl = String.format(
-                "https://graph.facebook.com/v18.0/%s?fields=followers_count,fan_count,name&access_token=%s",
+                "https://graph.facebook.com/v18.0/%s?fields=followers_count,fan_count,name,likes,talking_about_count,new_like_count&access_token=%s",
                 pageId, accessToken
             );
 
-            logger.debug("Fetching page info from: {}", pageInfoUrl.replaceAll("access_token=[^&]*", "access_token=***"));
+            logger.info("Fetching page info from Facebook API for page: {}", pageId);
             Map<String, Object> pageInfo = restTemplate.getForObject(pageInfoUrl, Map.class);
 
-            // Get follower count (try followers_count first, fall back to fan_count)
+            // Log what we actually received from Facebook
+            logger.info("Facebook API response: {}", pageInfo);
+
+            // Get follower count - try multiple field names
             int followerCount = 0;
             if (pageInfo != null) {
+                logger.info("Available fields in response: {}", pageInfo.keySet());
+
                 if (pageInfo.containsKey("followers_count")) {
                     followerCount = ((Number) pageInfo.get("followers_count")).intValue();
+                    logger.info("Got follower count from 'followers_count': {}", followerCount);
                 } else if (pageInfo.containsKey("fan_count")) {
                     followerCount = ((Number) pageInfo.get("fan_count")).intValue();
+                    logger.info("Got follower count from 'fan_count': {}", followerCount);
+                } else if (pageInfo.containsKey("likes")) {
+                    followerCount = ((Number) pageInfo.get("likes")).intValue();
+                    logger.info("Got follower count from 'likes': {}", followerCount);
+                } else {
+                    logger.warn("No follower count field found in response. Available fields: {}", pageInfo.keySet());
                 }
                 logger.info("Facebook page {} has {} followers", pageInfo.get("name"), followerCount);
+            } else {
+                logger.error("Received null response from Facebook API");
             }
 
             // Fetch post count (get recent posts and count them, or use summary)
@@ -71,20 +85,25 @@ public class FacebookService {
                 pageId, accessToken
             );
 
+            logger.info("Fetching posts from Facebook API");
             Map<String, Object> postsResponse = restTemplate.getForObject(postsUrl, Map.class);
             int postCount = 0;
             if (postsResponse != null && postsResponse.containsKey("data")) {
                 List<?> posts = (List<?>) postsResponse.get("data");
                 postCount = posts.size();
+                logger.info("Retrieved {} posts from feed", postCount);
 
                 // If we got 100 posts, there might be more, but we'll use 100 as the count
                 if (postCount == 100 && postsResponse.containsKey("summary")) {
                     Map<String, Object> summary = (Map<String, Object>) postsResponse.get("summary");
                     if (summary.containsKey("total_count")) {
                         postCount = ((Number) summary.get("total_count")).intValue();
+                        logger.info("Using total_count from summary: {}", postCount);
                     }
                 }
                 logger.info("Facebook page has {} posts", postCount);
+            } else {
+                logger.warn("No posts data in response. Response: {}", postsResponse);
             }
 
             // Set the metrics
