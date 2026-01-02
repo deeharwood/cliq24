@@ -4,3 +4,12 @@ client key:  awknvb40t4jd4ag3
 
 secret:  2JD1WoCRgFJH7WfCwKf7l9IFPm29dotk
 
+
+Sandbox:  
+Client key:  sbawagsgysn50xw8l7
+secret:      dR94A9M6VpT5fdtXp2EQHFYdXhZ7POY8
+
+
+
+
+jwt: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiI2OTFmODczMTY5ODI5Yjc3YjQyODc1N2IiLCJlbWFpbCI6ImRlZWhhcndvb2RAZ21haWwuY29tIiwic3ViIjoiNjkxZjg3MzE2OTgyOWI3N2I0Mjg3NTdiIiwiaWF0IjoxNzY0MDMxOTI2LCJleHAiOjE3NjQxMTgzMjZ9.0zFGmTHS2JMjzygDOJkFRSWFFXkQzzIMcfO2dxW7TWA

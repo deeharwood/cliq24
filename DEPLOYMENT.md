@@ -128,6 +128,8 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" http://localhost:8080/auth/me
    heroku addons:create mongolab:sandbox
    ```
 
+mongodb.railway.internal
+
 5. **Set Environment Variables**
    ```bash
    heroku config:set GOOGLE_CLIENT_ID=your-google-client-id
