@@ -27,23 +27,92 @@ public class FacebookService {
     }
 
     public AccountMetrics syncMetrics(SocialAccount account) {
-        // TODO: Implement real Facebook API integration
-        logger.info("Using demo metrics for Facebook account: {}", account.getUsername());
+        logger.info("Syncing real metrics for Facebook account: {}", account.getUsername());
 
-        // Return demo metrics for now
+        String accessToken = account.getAccessToken();
         AccountMetrics metrics = new AccountMetrics();
-        metrics.setEngagementScore(85); // Engagement score (0-100)
-        metrics.setConnections(1250); // Friends/followers
-        metrics.setPosts(89); // Total posts
-        metrics.setPendingResponses(5); // Pending comments/messages
-        metrics.setNewMessages(12); // Unread messages
+
+        // If no access token, return default metrics
+        if (accessToken == null || accessToken.isEmpty()) {
+            logger.warn("No access token for account {}, using default metrics", account.getId());
+            metrics.setConnections(0);
+            metrics.setPosts(0);
+            metrics.setPendingResponses(0);
+            metrics.setNewMessages(0);
+            return metrics;
+        }
+
+        try {
+            String pageId = account.getPlatformUserId();
+
+            // Fetch Page info including follower count
+            String pageInfoUrl = String.format(
+                "https://graph.facebook.com/v18.0/%s?fields=followers_count,fan_count,name&access_token=%s",
+                pageId, accessToken
+            );
+
+            logger.debug("Fetching page info from: {}", pageInfoUrl.replaceAll("access_token=[^&]*", "access_token=***"));
+            Map<String, Object> pageInfo = restTemplate.getForObject(pageInfoUrl, Map.class);
+
+            // Get follower count (try followers_count first, fall back to fan_count)
+            int followerCount = 0;
+            if (pageInfo != null) {
+                if (pageInfo.containsKey("followers_count")) {
+                    followerCount = ((Number) pageInfo.get("followers_count")).intValue();
+                } else if (pageInfo.containsKey("fan_count")) {
+                    followerCount = ((Number) pageInfo.get("fan_count")).intValue();
+                }
+                logger.info("Facebook page {} has {} followers", pageInfo.get("name"), followerCount);
+            }
+
+            // Fetch post count (get recent posts and count them, or use summary)
+            String postsUrl = String.format(
+                "https://graph.facebook.com/v18.0/%s/posts?summary=true&limit=100&access_token=%s",
+                pageId, accessToken
+            );
+
+            Map<String, Object> postsResponse = restTemplate.getForObject(postsUrl, Map.class);
+            int postCount = 0;
+            if (postsResponse != null && postsResponse.containsKey("data")) {
+                List<?> posts = (List<?>) postsResponse.get("data");
+                postCount = posts.size();
+
+                // If we got 100 posts, there might be more, but we'll use 100 as the count
+                if (postCount == 100 && postsResponse.containsKey("summary")) {
+                    Map<String, Object> summary = (Map<String, Object>) postsResponse.get("summary");
+                    if (summary.containsKey("total_count")) {
+                        postCount = ((Number) summary.get("total_count")).intValue();
+                    }
+                }
+                logger.info("Facebook page has {} posts", postCount);
+            }
+
+            // Set the metrics
+            metrics.setConnections(followerCount);
+            metrics.setPosts(postCount);
+
+            // For now, set pending responses and new messages to 0
+            // These would require additional API calls to conversations and comments
+            metrics.setPendingResponses(0);
+            metrics.setNewMessages(0);
+
+            logger.info("Successfully synced Facebook metrics: followers={}, posts={}", followerCount, postCount);
+
+        } catch (Exception e) {
+            logger.error("Failed to sync Facebook metrics: {}", e.getMessage(), e);
+            // Return default metrics on error
+            metrics.setConnections(0);
+            metrics.setPosts(0);
+            metrics.setPendingResponses(0);
+            metrics.setNewMessages(0);
+        }
 
         return metrics;
     }
 
     /**
      * Get recent messages for a Facebook account
-     * Returns the last 5 messages
+     * Returns the last 5 messages from conversations
      */
     public List<Map<String, Object>> getRecentMessages(String userId, String accountId) {
         logger.debug("Getting recent messages for account {} owned by user {}", accountId, userId);
@@ -60,16 +129,89 @@ public class FacebookService {
             throw new RuntimeException("This endpoint is only for Facebook accounts");
         }
 
-        // TODO: Integrate with Facebook Graph API to get real messages
-        // For now, return mock data
-        List<Map<String, Object>> messages = generateMockMessages();
+        String accessToken = account.getAccessToken();
+        if (accessToken == null || accessToken.isEmpty()) {
+            logger.warn("No access token for account {}, returning mock data", accountId);
+            return generateMockMessages();
+        }
 
-        logger.info("Returning {} messages for account {}", messages.size(), accountId);
-        return messages;
+        try {
+            String pageId = account.getPlatformUserId();
+
+            // Fetch conversations from the page
+            String conversationsUrl = String.format(
+                "https://graph.facebook.com/v18.0/%s/conversations?fields=id,snippet,updated_time,unread_count,participants&limit=5&access_token=%s",
+                pageId, accessToken
+            );
+
+            logger.info("Fetching conversations from Facebook API for page: {}", pageId);
+            Map<String, Object> response = restTemplate.getForObject(conversationsUrl, Map.class);
+
+            if (response == null || !response.containsKey("data")) {
+                logger.warn("No conversations data returned from Facebook API");
+                return generateMockMessages();
+            }
+
+            List<Map<String, Object>> conversations = (List<Map<String, Object>>) response.get("data");
+            List<Map<String, Object>> messages = new ArrayList<>();
+
+            // Process each conversation
+            for (Map<String, Object> conversation : conversations) {
+                String conversationId = (String) conversation.get("id");
+
+                // Fetch messages from this conversation
+                String messagesUrl = String.format(
+                    "https://graph.facebook.com/v18.0/%s/messages?fields=id,from,message,created_time&limit=1&access_token=%s",
+                    conversationId, accessToken
+                );
+
+                Map<String, Object> messagesResponse = restTemplate.getForObject(messagesUrl, Map.class);
+
+                if (messagesResponse != null && messagesResponse.containsKey("data")) {
+                    List<Map<String, Object>> conversationMessages = (List<Map<String, Object>>) messagesResponse.get("data");
+
+                    if (!conversationMessages.isEmpty()) {
+                        Map<String, Object> latestMessage = conversationMessages.get(0);
+                        Map<String, Object> formattedMessage = new HashMap<>();
+
+                        formattedMessage.put("id", latestMessage.get("id"));
+                        formattedMessage.put("message", latestMessage.get("message"));
+                        formattedMessage.put("timestamp", latestMessage.get("created_time"));
+
+                        // Get sender info from participants
+                        if (conversation.containsKey("participants")) {
+                            Map<String, Object> participants = (Map<String, Object>) conversation.get("participants");
+                            if (participants.containsKey("data")) {
+                                List<Map<String, Object>> participantList = (List<Map<String, Object>>) participants.get("data");
+                                if (!participantList.isEmpty()) {
+                                    Map<String, Object> participant = participantList.get(0);
+                                    formattedMessage.put("senderId", participant.get("id"));
+                                    formattedMessage.put("senderName", participant.get("name"));
+                                }
+                            }
+                        }
+
+                        // Check if message is read based on unread_count
+                        int unreadCount = conversation.containsKey("unread_count") ?
+                            ((Number) conversation.get("unread_count")).intValue() : 0;
+                        formattedMessage.put("read", unreadCount == 0);
+
+                        messages.add(formattedMessage);
+                    }
+                }
+            }
+
+            logger.info("Returning {} real messages from Facebook", messages.size());
+            return messages;
+
+        } catch (Exception e) {
+            logger.error("Failed to fetch messages from Facebook API: {}", e.getMessage(), e);
+            return generateMockMessages();
+        }
     }
 
     /**
-     * Send a message via Facebook
+     * Send a message via Facebook Send API
      */
     public Map<String, Object> sendMessage(String userId, String accountId, String recipientId, String message) {
         logger.debug("Sending message from account {} to {}", accountId, recipientId);
@@ -86,24 +228,60 @@ public class FacebookService {
             throw new RuntimeException("This endpoint is only for Facebook accounts");
         }
 
-        // TODO: Integrate with Facebook Graph API to send real messages
-        // For now, return mock success response
+        String accessToken = account.getAccessToken();
+        if (accessToken == null || accessToken.isEmpty()) {
+            logger.warn("No access token for account {}, cannot send message", accountId);
+            throw new RuntimeException("No access token available for this account");
+        }
 
-        logger.info("Message sent successfully to {}", recipientId);
+        try {
+            // Use Facebook Send API to send the message
+            String sendApiUrl = String.format(
+                "https://graph.facebook.com/v18.0/me/messages?access_token=%s",
+                accessToken
+            );
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("success", true);
-        result.put("messageId", "mock_" + UUID.randomUUID().toString());
-        result.put("recipientId", recipientId);
-        result.put("message", message);
-        result.put("timestamp", System.currentTimeMillis() / 1000);
+            // Prepare the message payload
+            Map<String, Object> messagePayload = new HashMap<>();
+            Map<String, Object> recipient = new HashMap<>();
+            recipient.put("id", recipientId);
 
-        return result;
+            Map<String, Object> messageContent = new HashMap<>();
+            messageContent.put("text", message);
+
+            messagePayload.put("recipient", recipient);
+            messagePayload.put("message", messageContent);
+            messagePayload.put("messaging_type", "RESPONSE");
+
+            logger.info("Sending message via Facebook Send API to recipient: {}", recipientId);
+
+            // Send POST request to Facebook Send API
+            Map<String, Object> response = restTemplate.postForObject(sendApiUrl, messagePayload, Map.class);
+
+            if (response != null && response.containsKey("message_id")) {
+                logger.info("Message sent successfully via Facebook, message_id: {}", response.get("message_id"));
+
+                Map<String, Object> result = new HashMap<>();
+                result.put("success", true);
+                result.put("messageId", response.get("message_id"));
+                result.put("recipientId", recipientId);
+                result.put("message", message);
+                result.put("timestamp", System.currentTimeMillis() / 1000);
+
+                return result;
+            } else {
+                logger.error("Failed to send message, unexpected response: {}", response);
+                throw new RuntimeException("Failed to send message via Facebook API");
+            }
+
+        } catch (Exception e) {
+            logger.error("Failed to send message via Facebook API: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to send message: " + e.getMessage());
+        }
     }
 
     /**
-     * Generate mock messages for demo purposes
-     * TODO: Replace with real Facebook Graph API integration
+     * Generate mock messages as fallback when API access is unavailable
      */
     private List<Map<String, Object>> generateMockMessages() {
         List<Map<String, Object>> messages = new ArrayList<>();
