@@ -388,17 +388,27 @@ public class SocialAccountService {
 
             logger.info("Successfully obtained Facebook access token");
 
-            // Get user's Facebook profile
-            String profileUrl = String.format(
-                "https://graph.facebook.com/me?fields=id,name,email&access_token=%s",
+            // Get user's Facebook Pages (not personal profile)
+            String pagesUrl = String.format(
+                "https://graph.facebook.com/me/accounts?fields=id,name,access_token,followers_count,fan_count&access_token=%s",
                 accessToken
             );
 
-            Map<String, Object> profile = restTemplate.getForObject(profileUrl, Map.class);
-            String facebookId = (String) profile.get("id");
-            String name = (String) profile.get("name");
+            Map<String, Object> pagesResponse = restTemplate.getForObject(pagesUrl, Map.class);
+            List<Map<String, Object>> pages = (List<Map<String, Object>>) pagesResponse.get("data");
 
-            logger.info("Retrieved Facebook profile for user: {}", name);
+            if (pages == null || pages.isEmpty()) {
+                throw new RuntimeException("No Facebook Pages found. Please create a Facebook Page first, or make sure you've granted 'pages_show_list' and 'pages_read_engagement' permissions during login.");
+            }
+
+            // Use the first page (or in future, let user select)
+            Map<String, Object> page = pages.get(0);
+            String pageId = (String) page.get("id");
+            String pageName = (String) page.get("name");
+            String pageAccessToken = (String) page.get("access_token"); // Page-specific token
+
+            logger.info("Retrieved Facebook Page: {} (ID: {})", pageName, pageId);
+            logger.info("Found {} total pages for this user", pages.size());
 
             // Check if account already connected
             SocialAccount existingAccount = socialAccountRepository
@@ -407,9 +417,9 @@ public class SocialAccountService {
 
             if (existingAccount != null) {
                 // Update existing account
-                existingAccount.setPlatformUserId(facebookId);
-                existingAccount.setUsername(name);
-                existingAccount.setAccessToken(accessToken);
+                existingAccount.setPlatformUserId(pageId);
+                existingAccount.setUsername(pageName);
+                existingAccount.setAccessToken(pageAccessToken); // Use page token, not user token
                 existingAccount.setConnectedAt(LocalDateTime.now());
 
                 // Sync metrics
@@ -424,17 +434,17 @@ public class SocialAccountService {
                 SocialAccount account = new SocialAccount();
                 account.setUserId(userId);
                 account.setPlatform("Facebook");
-                account.setPlatformUserId(facebookId);
-                account.setUsername(name);
-                account.setAccessToken(accessToken);
+                account.setPlatformUserId(pageId);
+                account.setUsername(pageName);
+                account.setAccessToken(pageAccessToken); // Use page token, not user token
                 account.setConnectedAt(LocalDateTime.now());
 
-                // Initialize with demo metrics (real API integration coming soon)
+                // Sync real metrics from Facebook Page
                 account.setMetrics(facebookService.syncMetrics(account));
                 account.setLastSynced(LocalDateTime.now());
 
                 SocialAccount savedAccount = socialAccountRepository.save(account);
-                logger.info("Successfully connected Facebook account for user {}", userId);
+                logger.info("Successfully connected Facebook Page for user {}", userId);
 
                 return socialAccountMapper.toDTO(savedAccount);
             }
